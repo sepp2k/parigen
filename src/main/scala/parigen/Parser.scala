@@ -7,9 +7,11 @@ object Parser extends RegexParsers {
         rules => ast.Grammar(rules.toMap)
     }
 
-    def rule = (ID <~ ":") ~ expression <~ ";" ^^ {
-        case name ~ exp => name -> exp
-    }
+    def rule =
+        "token".? ~ (ID <~ ":") ~ expression <~ ";" ^^ {
+            case tokenOpt ~ name ~ exp =>
+                name -> ast.Rule(name, ast.RuleFlags(tokenRule = tokenOpt.isDefined), exp)
+        }
 
     def expression: Parser[ast.Expression] =
         rep1sep(sequence, "|") ^^ {
@@ -18,7 +20,7 @@ object Parser extends RegexParsers {
 
     def sequence =
         quantifiedExpression.+ ^^ {
-            exps => exps.reduceLeft(ast.Seq)
+            exps => exps.reduceLeft(ast.Concattenation)
         } |
         success(ast.Epsilon)
 
@@ -27,7 +29,7 @@ object Parser extends RegexParsers {
             case exp ~ Some(Star) =>
                 ast.KleeneStar(exp)
             case exp ~ Some(Plus) =>
-                ast.Seq(exp, ast.KleeneStar(exp))
+                ast.Concattenation(exp, ast.KleeneStar(exp))
             case exp ~ Some(Optional) =>
                 ast.Or(exp, ast.Epsilon)
             case exp ~ None =>
@@ -41,17 +43,21 @@ object Parser extends RegexParsers {
 
     def quantifier = "*" ^^^ Star | "+" ^^^ Plus | "?" ^^^ Optional
 
-    def primaryExpression =
+    def primaryExpression: Parser[ast.Expression] =
         ID ^^ {
             id => ast.RuleName(id)
         } |
         STRING_LIT ^^ {
             str => ast.StringLit(str)
         } |
+        CHARACTER_CLASS ^^ {
+            cc => ast.CharacterClass.parse(cc)
+        } |
         "(" ~> expression <~ ")"
 
+    def CHARACTER_CLASS = """\[(\\.|[^]])*\]""".r
     def ID = "[a-zA-Z_][a-zA-Z_0-9]*".r
-    def STRING_LIT = "\"[^\"]*\"".r ^^ {
+    def STRING_LIT = """"[^"]*"""".r ^^ { // Fix syntax highlighting: "
         str => str.substring(1, str.length - 1)
     }
 
@@ -59,9 +65,9 @@ object Parser extends RegexParsers {
 
     def main(args: Array[String]): Unit = {
         val g = """
-            grammar: x y* | "la"+ ("li" | "lee" "e"*)? "lu" |;
-            x: "X";
-            y: "Y";
+            grammar: X Y* | "la"+ ("li" | "lee" "e"*)? "lu" |;
+            token X: "X"+ [a-zA-Z0-9_]* "X";
+            token Y: "Y" [^Y]* "Y";
         """
         println("Input:")
         println(g)
