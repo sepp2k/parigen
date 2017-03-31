@@ -1,12 +1,27 @@
 package parigen
 
+import java.io.PrintStream
+
 object Parigen {
-    def compile(src: String) = {
+    def compile(src: String, out: PrintStream, printStages: Boolean = false) = {
         Parser.parse(src) match {
             case Parser.Success(ast, _) =>
-                (Some(ast), Validator.validate(ast))
+                if (printStages) {
+                    System.err.println("AST:")
+                    System.err.println(ast)
+                }
+                val diags = Validator.validate(ast)
+                if (diags.exists(_.severity == Validator.Error)) diags
+                else {
+                    val tokenIDs = LexerGenerator.generateLexer(ast, out)
+                    if(printStages) {
+                        println("Token IDs:")
+                        tokenIDs.foreach(println)
+                    }
+                    diags
+                }
             case Parser.NoSuccess(message, _) =>
-                (None, List( Validator.Diagnostic( Validator.Error, None, message )))
+                List( Validator.Diagnostic( Validator.Error, None, s"Illegal syntax: $message" ))
         }
     }
 }

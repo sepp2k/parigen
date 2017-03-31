@@ -13,6 +13,8 @@ package ast {
 
     case class Rule(name: String, flags: RuleFlags, exp: Expression) {
         override def toString = s"$flags$name: $exp;"
+
+        def isTokenRule = flags.tokenRule
     }
 
     sealed abstract class Expression

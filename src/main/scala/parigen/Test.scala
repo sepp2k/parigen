@@ -7,11 +7,9 @@ object Test {
             token X: "X"+ [a-zA-Z0-9_]* "X";
             token Y: "Y" [^Y]* "Y";
         """
-        println("Input:")
-        println(g)
-        println("Result:")
-        val (astOpt, diags) = Parigen.compile(g)
-        diags.foreach(println)
-        println(astOpt)
+        System.err.println("Input:")
+        System.err.println(g)
+        val diags = Parigen.compile(g, System.out, printStages = true)
+        diags.foreach(System.err.println)
     }
 }
