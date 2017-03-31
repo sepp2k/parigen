@@ -15,7 +15,7 @@ object Validator {
     case object Error extends Severity
 
     def validate(grammar: ast.Grammar) = {
-        grammar.rules.values.flatMap {
+        grammar.rules.flatMap {
             case ast.Rule(name, flags, exp) =>
                 validateExpression(name, flags, exp, List())
         }

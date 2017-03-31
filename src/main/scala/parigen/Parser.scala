@@ -4,13 +4,13 @@ import scala.util.parsing.combinator._
 
 object Parser extends RegexParsers {
     def grammar = rule.* ^^ {
-        rules => ast.Grammar(rules.toMap)
+        rules => ast.Grammar(rules)
     }
 
     def rule =
         "token".? ~ (ID <~ ":") ~ expression <~ ";" ^^ {
             case tokenOpt ~ name ~ exp =>
-                name -> ast.Rule(name, ast.RuleFlags(tokenRule = tokenOpt.isDefined), exp)
+                ast.Rule(name, ast.RuleFlags(tokenRule = tokenOpt.isDefined), exp)
         }
 
     def expression: Parser[ast.Expression] =

@@ -3,8 +3,8 @@ package parigen
 import scala.collection.mutable
 
 package ast {
-    case class Grammar(rules: Map[String, Rule]) {
-        override def toString = rules.map { case (name, rule) => rule }.mkString("\n")
+    case class Grammar(rules: Seq[Rule]) {
+        override def toString = rules.mkString("\n")
     }
 
     case class RuleFlags(tokenRule: Boolean = false) {
