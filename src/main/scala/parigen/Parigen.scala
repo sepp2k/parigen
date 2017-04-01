@@ -1,6 +1,7 @@
 package parigen
 
 import java.io.PrintStream
+import lexer_generator.LexerGenerator
 
 object Parigen {
     def compile(src: String, out: PrintStream, printStages: Boolean = false) = {
