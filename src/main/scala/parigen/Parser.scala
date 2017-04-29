@@ -4,34 +4,34 @@ import scala.util.parsing.combinator._
 
 object Parser extends RegexParsers {
     def grammar = rule.* ^^ {
-        rules => ast.Grammar(rules)
+        rules => Ast.Grammar(rules)
     }
 
     def rule =
         "token".? ~ (ID <~ ":") ~ expression <~ ";" ^^ {
             case tokenOpt ~ name ~ exp =>
-                ast.Rule(name, ast.RuleFlags(tokenRule = tokenOpt.isDefined), exp)
+                Ast.Rule(name, Ast.RuleFlags(tokenRule = tokenOpt.isDefined), exp)
         }
 
-    def expression: Parser[ast.Expression] =
+    def expression: Parser[Ast.Expression] =
         rep1sep(sequence, "|") ^^ {
-            exps => exps.reduce(ast.Or)
+            exps => exps.reduce(Ast.Or)
         }
 
     def sequence =
         quantifiedExpression.+ ^^ {
-            exps => exps.reduceLeft(ast.Concattenation)
+            exps => exps.reduceLeft(Ast.Concattenation)
         } |
-        success(ast.Epsilon)
+        success(Ast.epsilon)
 
     def quantifiedExpression =
         primaryExpression ~ quantifier.? ^^ {
             case exp ~ Some(Star) =>
-                ast.KleeneStar(exp)
+                Ast.KleeneStar(exp)
             case exp ~ Some(Plus) =>
-                ast.Concattenation(exp, ast.KleeneStar(exp))
+                Ast.Concattenation(exp, Ast.KleeneStar(exp))
             case exp ~ Some(Optional) =>
-                ast.Or(exp, ast.Epsilon)
+                Ast.Or(exp, Ast.epsilon)
             case exp ~ None =>
                 exp
         }
@@ -43,15 +43,15 @@ object Parser extends RegexParsers {
 
     def quantifier = "*" ^^^ Star | "+" ^^^ Plus | "?" ^^^ Optional
 
-    def primaryExpression: Parser[ast.Expression] =
+    def primaryExpression: Parser[Ast.Expression] =
         ID ^^ {
-            id => ast.RuleName(id)
+            id => Ast.RuleName(id)
         } |
         STRING_LIT ^^ {
-            str => ast.StringLit(str)
+            str => Ast.StringLit(str)
         } |
         CHARACTER_CLASS ^^ {
-            cc => ast.CharacterClass.parse(cc)
+            cc => Ast.CharacterClass.parse(cc)
         } |
         "(" ~> expression <~ ")"
 

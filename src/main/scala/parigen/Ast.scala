@@ -2,7 +2,7 @@ package parigen
 
 import scala.collection.mutable
 
-package ast {
+object Ast {
     case class Grammar(rules: Seq[Rule]) {
         override def toString = rules.mkString("\n")
     }
@@ -24,6 +24,9 @@ package ast {
     case class StringLit(string: String) extends Expression {
         override def toString = s""""$string"""" // Fix VS code syntax highlighting: "
     }
+
+    val epsilon = StringLit("")
+
     case class CharacterClass(ranges: Seq[(Char, Char)], negated: Boolean) extends Expression {
         override def toString = {
             val caret = if(negated) "^" else ""
@@ -73,8 +76,5 @@ package ast {
     }
     case class KleeneStar(arg: Expression) extends Expression {
         override def toString = s"($arg*)"
-    }
-    case object Epsilon extends Expression {
-        override def toString = "ε"
     }
 }

@@ -14,7 +14,7 @@ class TokenExtractor {
         }
     }
 
-    def process(grammar: ast.Grammar): Unit = {
+    def process(grammar: Ast.Grammar): Unit = {
         for(rule <- grammar.rules) {
             if(rule.isTokenRule) {
                 addTokenType(Named(rule.name))
@@ -24,26 +24,26 @@ class TokenExtractor {
         }
     }
 
-    def findStringLits(exp: ast.Expression) {
+    def findStringLits(exp: Ast.Expression) {
         exp match {
-            case ast.StringLit(str) =>
-                addTokenType(Literal(str))
-            case ast.CharacterClass(_, _) | ast.Epsilon | ast.RuleName(_) =>
+            case Ast.CharacterClass(_, _) | Ast.RuleName(_) | Ast.StringLit("") =>
                 // do nothing
-            case ast.Or(lhs, rhs) =>
+            case Ast.StringLit(str) =>
+                addTokenType(Literal(str))
+            case Ast.Or(lhs, rhs) =>
                 findStringLits(lhs)
                 findStringLits(rhs)
-            case ast.Concattenation(lhs, rhs) =>
+            case Ast.Concattenation(lhs, rhs) =>
                 findStringLits(lhs)
                 findStringLits(rhs)
-            case ast.KleeneStar(arg) =>
+            case Ast.KleeneStar(arg) =>
                 findStringLits(arg)
         }
     }
 }
 
 object TokenExtractor {
-    def extractTokens(grammar: ast.Grammar) = {
+    def extractTokens(grammar: Ast.Grammar) = {
         val tokenExtractor = new TokenExtractor
         tokenExtractor.process(grammar)
         tokenExtractor.tokenIDs.toMap

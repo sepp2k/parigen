@@ -14,36 +14,36 @@ object Validator {
     case object Warning extends Severity
     case object Error extends Severity
 
-    def validate(grammar: ast.Grammar) = {
+    def validate(grammar: Ast.Grammar) = {
         grammar.rules.flatMap {
-            case ast.Rule(name, flags, exp) =>
+            case Ast.Rule(name, flags, exp) =>
                 validateExpression(name, flags, exp, List())
         }
     }
 
-    def validateExpression(name: String, flags: ast.RuleFlags, exp: ast.Expression, acc: List[Diagnostic]): List[Diagnostic] = exp match {
-        case ast.CharacterClass(ranges, negated) =>
+    def validateExpression(name: String, flags: Ast.RuleFlags, exp: Ast.Expression, acc: List[Diagnostic]): List[Diagnostic] = exp match {
+        case Ast.CharacterClass(ranges, negated) =>
             if (flags.tokenRule && ranges.isEmpty && ! negated) Diagnostic(Warning, name, "Empty character class.") :: acc
             else if (flags.tokenRule) acc
             else Diagnostic(Error, name, "Character classes are only allowed in token rules.") :: acc
 
-        case ast.RuleName(_) =>
+        case Ast.RuleName(_) =>
             if (flags.tokenRule) Diagnostic(Error, name, "References to other rules are not allowed in token rules.") :: acc
             else acc
 
-        case ast.Or(lhs, rhs) =>
+        case Ast.Or(lhs, rhs) =>
             validateExpression(name, flags, rhs, validateExpression(name, flags, lhs, acc))
 
-        case ast.Concattenation(lhs, rhs) =>
+        case Ast.Concattenation(lhs, rhs) =>
             validateExpression(name, flags, rhs, validateExpression(name, flags, lhs, acc))
 
-        case ast.KleeneStar(ast.Epsilon) =>
+        case Ast.KleeneStar(Ast.StringLit("")) =>
             Diagnostic(Warning, name, "Epsilon rule inside repetition.") :: acc
 
-        case ast.KleeneStar(arg) =>
+        case Ast.KleeneStar(arg) =>
             validateExpression(name, flags, arg, acc)
 
-        case ast.StringLit(_) | ast.Epsilon =>
+        case Ast.StringLit(_) =>
             acc
     }
 }

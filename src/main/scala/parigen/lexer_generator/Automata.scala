@@ -8,7 +8,7 @@ object Automata {
     case class Nfa(alphabet: Alphabet, states: Set[State], transitions: Map[(State, Symbol), Set[State]], startingStates: Set[State], acceptingStates: Set[State])
     case class Dfa(alphabet: Alphabet, states: Set[State], transitions: Map[(State, Symbol), State], startingState: State, acceptingStates: Set[State])
 
-    def regexesToNfa(regexes: List[(ast.Expression, Int)]): Nfa = {
+    def regexesToNfa(regexes: List[(Ast.Expression, Int)]): Nfa = {
         val alphabet = extractAlphabet(regexes.map(_._1))
         // TODO
         ???
@@ -90,32 +90,30 @@ object Automata {
         } + (Char.MinValue -> pred(alpha.min._1)) + (succ(alpha.max._2) -> Char.MaxValue)
     }
 
-    def extractAlphabet(regex: ast.Expression): Alphabet = regex match {
-        case ast.Epsilon =>
-            emptyAlphabet
-        case ast.StringLit(str) =>
+    def extractAlphabet(regex: Ast.Expression): Alphabet = regex match {
+        case Ast.StringLit(str) =>
             SortedSet(str.map(c => (c,c)) : _*)
-        case ast.CharacterClass(ranges, false) =>
+        case Ast.CharacterClass(ranges, false) =>
             SortedSet(ranges : _*)
-        case ast.CharacterClass(ranges, true) =>
+        case Ast.CharacterClass(ranges, true) =>
             invert(SortedSet(ranges : _*))
-        case ast.KleeneStar(arg) =>
+        case Ast.KleeneStar(arg) =>
             extractAlphabet(arg)
-        case ast.Or(lhs, rhs) =>
+        case Ast.Or(lhs, rhs) =>
             mergeAlphabets(extractAlphabet(lhs), extractAlphabet(rhs), emptyAlphabet)
-        case ast.Concattenation(lhs, rhs) =>
+        case Ast.Concattenation(lhs, rhs) =>
             mergeAlphabets(extractAlphabet(lhs), extractAlphabet(rhs), emptyAlphabet)
-        case ast.RuleName(_) =>
+        case Ast.RuleName(_) =>
             sys.error("Rule name in regex should have been rejected.")
     }
 
-    def extractAlphabet(regexes: List[ast.Expression]): Alphabet = {
+    def extractAlphabet(regexes: List[Ast.Expression]): Alphabet = {
         regexes.map(extractAlphabet).foldLeft(emptyAlphabet) {
             (acc, alpha) => mergeAlphabets(acc, alpha, emptyAlphabet)
         }
     }
 
-    def regexesToDfa(regexes: List[(ast.Expression, Int)]): Dfa = {
+    def regexesToDfa(regexes: List[(Ast.Expression, Int)]): Dfa = {
         nfaToDfa(regexesToNfa(regexes))
     }
 }
