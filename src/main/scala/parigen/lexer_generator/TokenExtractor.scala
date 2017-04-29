@@ -4,8 +4,9 @@ import parigen._
 import scala.collection.mutable
 
 class TokenExtractor {
-    val tokenIDs = new mutable.HashMap[TokenType, Int]
-    var counter = 0
+    import TokenExtractor.TokenID
+    val tokenIDs = new mutable.HashMap[TokenType, TokenID]
+    var counter: TokenID = 0
 
     private def addTokenType(tt: TokenType): Unit = {
         if (!tokenIDs.isDefinedAt(tt)) {
@@ -43,6 +44,8 @@ class TokenExtractor {
 }
 
 object TokenExtractor {
+    type TokenID = Int
+
     def extractTokens(grammar: Ast.Grammar) = {
         val tokenExtractor = new TokenExtractor
         tokenExtractor.process(grammar)

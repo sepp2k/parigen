@@ -3,12 +3,13 @@ package parigen.lexer_generator
 import parigen._
 import scala.collection.SortedSet
 import scala.annotation.tailrec
+import TokenExtractor.TokenID
 
 object Automata {
     case class Nfa(alphabet: Alphabet, states: Set[State], transitions: Map[(State, Symbol), Set[State]], startingStates: Set[State], acceptingStates: Set[State])
     case class Dfa(alphabet: Alphabet, states: Set[State], transitions: Map[(State, Symbol), State], startingState: State, acceptingStates: Set[State])
 
-    def regexesToNfa(regexes: List[(Ast.Expression, Int)]): Nfa = {
+    def regexesToNfa(regexes: List[(Ast.Expression, TokenID)]): Nfa = {
         val alphabet = extractAlphabet(regexes.map(_._1))
         // TODO
         ???
@@ -113,7 +114,7 @@ object Automata {
         }
     }
 
-    def regexesToDfa(regexes: List[(Ast.Expression, Int)]): Dfa = {
+    def regexesToDfa(regexes: List[(Ast.Expression, TokenID)]): Dfa = {
         nfaToDfa(regexesToNfa(regexes))
     }
 }
