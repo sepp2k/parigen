@@ -14,14 +14,16 @@ object Parigen {
                 val diags = Validator.validate(ast)
                 if (diags.exists(_.severity == Validator.Error)) diags
                 else {
-                    val (tokenIDs, alphabet) = LexerGenerator.generateLexer(ast, out)
+                    val (tokenIDs, nfa) = LexerGenerator.generateLexer(ast, out)
                     if(printStages) {
                         println("Token IDs:")
                         tokenIDs.foreach(println)
-                        println("Equivalence classes:")
-                        alphabet.foreach {
-                            case (start, end) => println(s"${start.toInt} - ${end.toInt} ($start - $end)")
+                        println("Alphabet:")
+                        nfa.alphabet.foreach {
+                            case ((from, to), id) => println(s"$from .. $to -> $id")
                         }
+                        println("Nfa:")
+                        println(nfa)
                     }
                     diags
                 }

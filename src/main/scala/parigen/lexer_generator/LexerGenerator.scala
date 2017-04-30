@@ -2,13 +2,12 @@ package parigen.lexer_generator
 
 import parigen._
 import java.io.PrintStream
-import TokenExtractor.TokenID
+import TokenInfo.TokenType
 
 object LexerGenerator {
-    def generateLexer(grammar: Ast.Grammar, out: PrintStream): (Map[TokenType, TokenID], Automata.Alphabet) = {
+    def generateLexer(grammar: Ast.Grammar, out: PrintStream): (Map[TokenType, TokenInfo], Automata.Nfa) = {
         val tokens = TokenExtractor.extractTokens(grammar)
-        val regexes = grammar.rules.filter(_.isTokenRule).map(_.exp)
-        val alphabet = Automata.extractAlphabet(regexes.toList)
-        (tokens, alphabet)
+        val nfa = Automata.regexesToNfa(tokens.values.map(tok => (tok.regex, tok.id)).toList)
+        (tokens, nfa)
     }
 }
