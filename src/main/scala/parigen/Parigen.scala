@@ -23,7 +23,7 @@ object Parigen {
                             case ((from, to), id) => println(s"$from .. $to -> $id")
                         }
                         println("Nfa:")
-                        println(nfa)
+                        println(util.AutomataVisuzualizer.nfaToDot(nfa))
                     }
                     diags
                 }
