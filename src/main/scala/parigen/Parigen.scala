@@ -5,7 +5,15 @@ import java.nio.charset.StandardCharsets.UTF_8
 import lexer_generator.LexerGenerator
 
 object Parigen {
-    def compile(src: String, printStages: Boolean = false) = {
+    sealed abstract class DebugMode
+    object DebugMode {
+        case object None extends DebugMode
+        case object GraphsToFiles extends DebugMode
+        case object DisplayGraphs extends DebugMode
+    }
+
+    def compile(src: String, debugMode: DebugMode = DebugMode.None) = {
+        val printStages = debugMode != DebugMode.None
         Parser.parse(src) match {
             case Parser.Success(ast, _) =>
                 if (printStages) {
@@ -24,9 +32,13 @@ object Parigen {
                             case ((from, to), id) => println(s"$from .. $to -> $id")
                         }
 
-                        val file = Files.createTempFile("nfa", ".dot")
-                        Files.write(file, util.AutomataVisuzualizer.nfaToDot(nfa).getBytes(UTF_8))
-                        println(s"Nfa written to $file")
+                        if (debugMode == DebugMode.GraphsToFiles) {
+                            val file = Files.createTempFile("nfa", ".dot")
+                            Files.write(file, util.AutomataVisuzualizer.nfaToDot(nfa).getBytes(UTF_8))
+                            println(s"Nfa written to $file")
+                        } else {
+                            util.AutomataVisuzualizer.displayNfa(nfa)
+                        }
                     }
                     diags
                 }
