@@ -7,6 +7,7 @@ object AutomataVisuzualizer {
         def escape(chr: Char) =
             if (chr == '"') "\\\""
             else if (chr == '\\') "\\\\"
+            else if (Character.isISOControl(chr)) s"\\\\${chr.toInt}"
             else chr.toString
         def nodeName(state: Automata.State) = {
             val name = if(nfa.initialStates.contains(state)) s"<> $state" else state.toString

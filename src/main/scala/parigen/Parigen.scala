@@ -1,5 +1,7 @@
 package parigen
 
+import java.nio.file.Files
+import java.nio.charset.StandardCharsets.UTF_8
 import java.io.PrintStream
 import lexer_generator.LexerGenerator
 
@@ -22,8 +24,10 @@ object Parigen {
                         nfa.alphabet.foreach {
                             case ((from, to), id) => println(s"$from .. $to -> $id")
                         }
-                        println("Nfa:")
-                        println(util.AutomataVisuzualizer.nfaToDot(nfa))
+
+                        val file = Files.createTempFile("nfa", ".dot")
+                        Files.write(file, util.AutomataVisuzualizer.nfaToDot(nfa).getBytes(UTF_8))
+                        println(s"Nfa written to $file")
                     }
                     diags
                 }
