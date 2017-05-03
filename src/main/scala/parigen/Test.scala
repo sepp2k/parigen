@@ -11,7 +11,7 @@ object Test {
         val g = try source.mkString finally source.close()
         println("Input:")
         println(g)
-        val diags = Parigen.compile(g, System.out, printStages = true)
+        val diags = Parigen.compile(g, printStages = true)
         diags.foreach(System.err.println)
     }
 }

@@ -2,11 +2,10 @@ package parigen
 
 import java.nio.file.Files
 import java.nio.charset.StandardCharsets.UTF_8
-import java.io.PrintStream
 import lexer_generator.LexerGenerator
 
 object Parigen {
-    def compile(src: String, out: PrintStream, printStages: Boolean = false) = {
+    def compile(src: String, printStages: Boolean = false) = {
         Parser.parse(src) match {
             case Parser.Success(ast, _) =>
                 if (printStages) {
@@ -16,7 +15,7 @@ object Parigen {
                 val diags = Validator.validate(ast)
                 if (diags.exists(_.severity == Validator.Error)) diags
                 else {
-                    val (tokenIDs, nfa) = LexerGenerator.generateLexer(ast, out)
+                    val (tokenIDs, nfa) = LexerGenerator.generateLexer(ast)
                     if(printStages) {
                         println("Token IDs:")
                         tokenIDs.foreach(println)
