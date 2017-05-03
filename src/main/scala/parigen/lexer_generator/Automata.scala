@@ -10,22 +10,34 @@ object Automata {
     case class Nfa(
         alphabet: IndexedAlphabet,
         states: Set[State],
-        transitions: Map[(State, Symbol), Set[State]],
+        transitions: Map[State, Map[Symbol, Set[State]]],
         initialStates: Set[State],
         acceptingStates: Map[State, TokenID]
     ) {
+        def flatTransitions =
+            for((state, outgoing) <- transitions; (sym, targets) <- outgoing; target <- targets)
+                yield (state, sym, target)
+
+        def transitionsFrom(state: State) = transitions.getOrElse(state, Map())
+
         def or(other: Nfa) = {
             require(alphabet == other.alphabet)
-            Nfa(alphabet, states ++ other.states, transitions ++ other.transitions,
+            Nfa(alphabet, states ++ other.states, util.Map.merge(transitions, other.transitions)(_ ++ _),
                 initialStates ++ other.initialStates, acceptingStates ++ other.acceptingStates)
         }
 
         def concat(other: Nfa) = {
             require(alphabet == other.alphabet)
             val trans = transitions.map {
-                case ((state, sym), targets) =>
-                    if (targets.exists(t => acceptingStates.isDefinedAt(t))) (state, sym) -> (targets ++ other.initialStates)
-                    else (state, sym) -> targets
+                case (state, outgoing) =>
+                    state -> outgoing.map {
+                        case (sym, targets) =>
+                            val newTargets = targets.flatMap { t =>
+                                if (acceptingStates.isDefinedAt(t)) other.initialStates + t
+                                else List(t)
+                            }
+                            sym -> newTargets
+                    }
             }
             Nfa(alphabet, states ++ other.states, trans ++ other.transitions, initialStates, other.acceptingStates)
         }
@@ -52,7 +64,7 @@ object Automata {
             val s = new State
             val a = new State
             val sym = lookup(alphabet, str(0))
-            val first = Nfa(alphabet, Set(s,a), Map((s, sym) -> Set(a)), Set(s), Map(a -> tokenID))
+            val first = Nfa(alphabet, Set(s,a), Map(s -> Map(sym -> Set(a))), Set(s), Map(a -> tokenID))
             if (str.length > 1) {
                 val rest = regexToNfa(Ast.StringLit(str.substring(1)), tokenID, alphabet)
                 first concat rest
@@ -62,7 +74,7 @@ object Automata {
             val s = new State
             val a = new State
             val realRanges = if(inverted) invert(SortedSet(ranges : _*)).toSeq else ranges
-            val trans = lookup(alphabet, realRanges).map { sym => (s, sym) -> Set(a)}.toMap
+            val trans = Map(s -> lookup(alphabet, realRanges).map { sym =>  sym -> Set(a)}.toMap)
             Nfa(alphabet, Set(s, a), trans, Set(s), Map(a -> tokenID))
         }
         case Ast.KleeneStar(arg) =>
@@ -107,7 +119,7 @@ object Automata {
 
     /** Translate a character to a symbol, which is its index in the list of equivalence classes. */
     def lookup(alphabet: IndexedAlphabet, char: Char): Symbol = {
-        val ((start, end), id) = alphabet.until(succ(char), succ(char)).max
+        val ((start, end), id) = alphabet.until(succ(char) -> succ(char)).max
         if (start <= char && char <= end) id
         else {
             sys.error(s"Character $char not found in alphabet $alphabet.")
@@ -119,8 +131,8 @@ object Automata {
      */
     def lookup(alphabet: IndexedAlphabet, ranges: Seq[(Char, Char)]): Seq[Symbol] = {
         ranges.flatMap { case (from, to) =>
-            val ((fromStart, fromEnd), fromId) = alphabet.until(succ(from), succ(from)).max
-            val ((toStart, toEnd), toId) = alphabet.until(succ(to), succ(to)).max
+            val ((fromStart, fromEnd), fromId) = alphabet.until(succ(from) -> succ(from)).max
+            val ((toStart, toEnd), toId) = alphabet.until(succ(to) -> succ(to)).max
             if (fromStart <= from && from <= fromEnd && toStart <= to && to <= toEnd) fromId.to(toId)
             else sys.error(s"Characters $from or $to not found in alphabet.")
         }

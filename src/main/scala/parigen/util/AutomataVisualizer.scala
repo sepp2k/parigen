@@ -16,12 +16,10 @@ object AutomataVisuzualizer {
                 case None => name
             }
         }
-        val trans = nfa.transitions.flatMap { case ((state, input), targets) =>
-            targets.map { target =>
-                val Some(((from, to), _)) = nfa.alphabet.find { case (_, id) => id == input}
-                val inputString = if (from == to) s""""$input (${escape(from)})"""" else s""""$input (${escape(from)} - ${escape(to)})""""
-                s""""${nodeName(state)}" -> "${nodeName(target)}" [type=s, label=$inputString];"""
-            }
+        val trans = nfa.flatTransitions.map { case (state, input, target) =>
+            val Some(((from, to), _)) = nfa.alphabet.find { case (_, id) => id == input}
+            val inputString = if (from == to) s""""$input (${escape(from)})"""" else s""""$input (${escape(from)} - ${escape(to)})""""
+            s""""${nodeName(state)}" -> "${nodeName(target)}" [type=s, label=$inputString];"""
         }.mkString("\n")
         s"digraph nfa {\n$trans\n}"
     }
