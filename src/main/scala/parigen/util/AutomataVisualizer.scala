@@ -1,5 +1,7 @@
 package parigen.util
 
+import scala.sys.process.Process
+import java.io.ByteArrayInputStream
 import parigen.lexer_generator.Automata
 
 object AutomataVisuzualizer {
@@ -22,5 +24,9 @@ object AutomataVisuzualizer {
             s""""${nodeName(state)}" -> "${nodeName(target)}" [type=s, label=$inputString];"""
         }.mkString("\n")
         s"digraph nfa {\n$trans\n}"
+    }
+
+    def displayNfa(nfa: Automata.Nfa): Unit = {
+        (Process(Seq("dot", "-Tx11", "-Ksfdp")) #< new ByteArrayInputStream(nfaToDot(nfa).getBytes)).!
     }
 }
