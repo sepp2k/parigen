@@ -58,8 +58,8 @@ object Parser extends RegexParsers {
 
     def CHARACTER_CLASS = """\[(\\.|[^]])*\]""".r
     def ID = "[a-zA-Z_][a-zA-Z_0-9]*".r
-    def STRING_LIT = """"[^"]*"""".r ^^ { // Fix syntax highlighting: "
-        str => str.substring(1, str.length - 1)
+    def STRING_LIT = """"(\\.|[^"])*"""".r ^^ {
+        str => str.substring(1, str.length - 1).replaceAll("\\\\(.)", "\\1")
     }
 
     def parse(str: String) = parseAll(grammar, str)
