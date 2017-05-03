@@ -53,6 +53,7 @@ object Parser extends RegexParsers {
         CHARACTER_CLASS ^^ {
             cc => Ast.CharacterClass.parse(cc)
         } |
+        "." ^^^ Ast.CharacterClass(Seq(), negated = true) |
         "(" ~> expression <~ ")"
 
     def CHARACTER_CLASS = """\[(\\.|[^]])*\]""".r

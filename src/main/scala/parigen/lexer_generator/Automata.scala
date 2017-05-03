@@ -168,9 +168,12 @@ object Automata {
     }
 
     def invert(alpha: Alphabet) = {
-        alpha.zip(alpha.tail).map {
-            case ((_, end1), (start2, _)) => succ(end1) -> pred(start2)
-        } + (Char.MinValue -> pred(alpha.min._1)) + (succ(alpha.max._2) -> Char.MaxValue)
+        if (alpha.isEmpty) SortedSet(Char.MinValue -> Char.MaxValue)
+        else {
+            alpha.zip(alpha.tail).map {
+                case ((_, end1), (start2, _)) => succ(end1) -> pred(start2)
+            } + (Char.MinValue -> pred(alpha.min._1)) + (succ(alpha.max._2) -> Char.MaxValue)
+        }
     }
 
     def extractAlphabet(regex: Ast.Expression): Alphabet = regex match {
