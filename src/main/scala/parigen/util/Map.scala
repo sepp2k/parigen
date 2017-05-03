@@ -10,4 +10,10 @@ object Map {
                 }
         }
     }
+
+    def mergeNestedSetMaps[K1, K2, V](map1: Map[K1, Map[K2, Set[V]]], map2: Map[K1, Map[K2, Set[V]]]): Map[K1, Map[K2, Set[V]]] = {
+        merge(map1, map2) {
+            (innerMap1, innerMap2) => merge(innerMap1, innerMap2)(_ ++ _)
+        }
+    }
 }

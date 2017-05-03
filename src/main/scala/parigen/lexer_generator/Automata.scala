@@ -9,7 +9,6 @@ object Automata {
     type Symbol = Int
     case class Nfa(
         alphabet: IndexedAlphabet,
-        states: Set[State],
         transitions: Map[State, Map[Symbol, Set[State]]],
         initialStates: Set[State],
         acceptingStates: Map[State, TokenID]
@@ -22,7 +21,7 @@ object Automata {
 
         def or(other: Nfa) = {
             require(alphabet == other.alphabet)
-            Nfa(alphabet, states ++ other.states, util.Map.merge(transitions, other.transitions)(_ ++ _),
+            Nfa(alphabet, util.Map.mergeNestedSetMaps(transitions, other.transitions),
                 initialStates ++ other.initialStates, acceptingStates ++ other.acceptingStates)
         }
 
@@ -32,14 +31,16 @@ object Automata {
                 case (state, outgoing) =>
                     state -> outgoing.map {
                         case (sym, targets) =>
-                            val newTargets = targets.flatMap { t =>
-                                if (acceptingStates.isDefinedAt(t)) other.initialStates + t
-                                else List(t)
+                            val newTargets = targets.flatMap { target =>
+                                if (acceptingStates.isDefinedAt(target)) {
+                                    if (transitionsFrom(target).isEmpty) other.initialStates
+                                    else other.initialStates + target
+                                } else List(target)
                             }
                             sym -> newTargets
                     }
             }
-            Nfa(alphabet, states ++ other.states, trans ++ other.transitions, initialStates, other.acceptingStates)
+            Nfa(alphabet, util.Map.mergeNestedSetMaps(trans, other.transitions), initialStates, other.acceptingStates)
         }
     }
 
@@ -52,19 +53,19 @@ object Automata {
     def regexesToNfa(regexes: Seq[(Ast.Expression, TokenID)]): Nfa = {
         val alphabet = indexAlphabet(extractAlphabet(regexes.map(_._1)))
         val nfas = regexes.map { case (regex, tokenID) => regexToNfa(regex, tokenID, alphabet) }
-        nfas.foldLeft( Nfa(alphabet, Set(), Map(), Set(), Map()) )(_ or _)
+        nfas.foldLeft( Nfa(alphabet, Map(), Set(), Map()) )(_ or _)
     }
 
     def regexToNfa(regex: Ast.Expression, tokenID: TokenID, alphabet: IndexedAlphabet): Nfa = regex match {
         case Ast.StringLit("") => {
             val s = new State
-            Nfa(alphabet, Set(s), Map(), Set(s), Map(s -> tokenID))
+            Nfa(alphabet, Map(), Set(s), Map(s -> tokenID))
         }
         case Ast.StringLit(str) => {
             val s = new State
             val a = new State
             val sym = lookup(alphabet, str(0))
-            val first = Nfa(alphabet, Set(s,a), Map(s -> Map(sym -> Set(a))), Set(s), Map(a -> tokenID))
+            val first = Nfa(alphabet, Map(s -> Map(sym -> Set(a))), Set(s), Map(a -> tokenID))
             if (str.length > 1) {
                 val rest = regexToNfa(Ast.StringLit(str.substring(1)), tokenID, alphabet)
                 first concat rest
@@ -75,7 +76,7 @@ object Automata {
             val a = new State
             val realRanges = if(inverted) invert(SortedSet(ranges : _*)).toSeq else ranges
             val trans = Map(s -> lookup(alphabet, realRanges).map { sym =>  sym -> Set(a)}.toMap)
-            Nfa(alphabet, Set(s, a), trans, Set(s), Map(a -> tokenID))
+            Nfa(alphabet, trans, Set(s), Map(a -> tokenID))
         }
         case Ast.KleeneStar(arg) =>
             val inner = regexToNfa(arg, tokenID, alphabet)
