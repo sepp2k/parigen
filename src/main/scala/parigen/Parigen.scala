@@ -27,8 +27,8 @@ object Parigen {
                     }
                     diags
                 }
-            case Parser.NoSuccess(message, _) =>
-                List( Validator.Diagnostic( Validator.Error, None, s"Illegal syntax: $message" ))
+            case Parser.NoSuccess(message, rest) =>
+                List( Validator.Diagnostic( Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message" ))
         }
     }
 }
