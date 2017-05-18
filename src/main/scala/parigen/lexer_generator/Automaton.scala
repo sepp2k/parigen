@@ -4,96 +4,22 @@ import parigen._
 import scala.collection.{SortedSet, SortedMap}
 import scala.annotation.tailrec
 import TokenInfo.TokenID
+import Automaton._
 
-object Automata {
+trait Automaton {
+    def alphabet: IndexedAlphabet
+    def flatTransitions: Iterable[(State, Symbol, State)]
+    def isInitialState(state: State): Boolean
+
+    /**
+     * If the given state is accepting, this returns the ID of the token that is accepted by this state.
+     * Otherwise it returns None.
+     */
+    def isAccepting(state: State): Option[TokenID]
+}
+
+object Automaton {
     type Symbol = Int
-    case class Nfa(
-        alphabet: IndexedAlphabet,
-        transitions: Map[State, Map[Symbol, Set[State]]],
-        initialStates: Set[State],
-        acceptingStates: Map[State, TokenID]
-    ) {
-        def flatTransitions =
-            for((state, outgoing) <- transitions; (sym, targets) <- outgoing; target <- targets)
-                yield (state, sym, target)
-
-        def transitionsFrom(state: State) = transitions.getOrElse(state, Map())
-
-        def or(other: Nfa) = {
-            require(alphabet == other.alphabet)
-            Nfa(alphabet, util.Map.mergeNestedSetMaps(transitions, other.transitions),
-                initialStates ++ other.initialStates, acceptingStates ++ other.acceptingStates)
-        }
-
-        def concat(other: Nfa) = {
-            require(alphabet == other.alphabet)
-            val trans = transitions.map {
-                case (state, outgoing) =>
-                    state -> outgoing.map {
-                        case (sym, targets) =>
-                            val newTargets = targets.flatMap { target =>
-                                if (acceptingStates.isDefinedAt(target)) {
-                                    if (transitionsFrom(target).isEmpty) other.initialStates
-                                    else other.initialStates + target
-                                } else List(target)
-                            }
-                            sym -> newTargets
-                    }
-            }
-            Nfa(alphabet, util.Map.mergeNestedSetMaps(trans, other.transitions), initialStates, other.acceptingStates)
-        }
-    }
-
-    case class Dfa(alphabet: IndexedAlphabet,
-        states: Set[State],
-        transitions: Map[(State, Symbol), State],
-        initialState: State,
-        acceptingStates: Map[State, TokenID])
-
-    def regexesToNfa(regexes: Seq[(Ast.Expression, TokenID)]): Nfa = {
-        val alphabet = indexAlphabet(extractAlphabet(regexes.map(_._1)))
-        val nfas = regexes.map { case (regex, tokenID) => regexToNfa(regex, tokenID, alphabet) }
-        nfas.foldLeft( Nfa(alphabet, Map(), Set(), Map()) )(_ or _)
-    }
-
-    def regexToNfa(regex: Ast.Expression, tokenID: TokenID, alphabet: IndexedAlphabet): Nfa = regex match {
-        case Ast.StringLit("") => {
-            val s = new State
-            Nfa(alphabet, Map(), Set(s), Map(s -> tokenID))
-        }
-        case Ast.StringLit(str) => {
-            val s = new State
-            val a = new State
-            val sym = lookup(alphabet, str(0))
-            val first = Nfa(alphabet, Map(s -> Map(sym -> Set(a))), Set(s), Map(a -> tokenID))
-            if (str.length > 1) {
-                val rest = regexToNfa(Ast.StringLit(str.substring(1)), tokenID, alphabet)
-                first concat rest
-            } else first
-        }
-        case Ast.CharacterClass(ranges, inverted) => {
-            val s = new State
-            val a = new State
-            val realRanges = if(inverted) invert(SortedSet(ranges : _*)).toSeq else ranges
-            val trans = Map(s -> lookup(alphabet, realRanges).map { sym =>  sym -> Set(a)}.toMap)
-            Nfa(alphabet, trans, Set(s), Map(a -> tokenID))
-        }
-        case Ast.KleeneStar(arg) =>
-            val inner = regexToNfa(arg, tokenID, alphabet)
-            val accepting = inner.acceptingStates ++ inner.initialStates.map(_ -> tokenID)
-            (inner concat inner).copy(acceptingStates = accepting)
-        case Ast.Or(lhs, rhs) =>
-            regexToNfa(lhs, tokenID, alphabet) or regexToNfa(rhs, tokenID, alphabet)
-        case Ast.Concattenation(lhs, rhs) =>
-            regexToNfa(lhs, tokenID, alphabet) concat regexToNfa(rhs, tokenID, alphabet)
-        case Ast.RuleName(_) =>
-            sys.error("Rule name in regex should have been rejected.")
-    }
-
-    def nfaToDfa(nfa: Nfa): Dfa = {
-        // TODO
-        ???
-    }
 
     /** A state doesn't have anything other than its identity. That is all we can do with a state is
      *  to check whether it's equal to another state.
@@ -214,9 +140,5 @@ object Automata {
 
     def indexAlphabet(alphabet: Alphabet): IndexedAlphabet = {
         SortedMap(alphabet.zipWithIndex.toSeq : _*)
-    }
-
-    def regexesToDfa(regexes: List[(Ast.Expression, TokenID)]): Dfa = {
-        nfaToDfa(regexesToNfa(regexes))
     }
 }

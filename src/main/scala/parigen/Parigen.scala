@@ -34,10 +34,10 @@ object Parigen {
 
                         if (debugMode == DebugMode.GraphsToFiles) {
                             val file = Files.createTempFile("nfa", ".dot")
-                            Files.write(file, util.AutomataVisuzualizer.nfaToDot(nfa).getBytes(UTF_8))
+                            Files.write(file, util.AutomataVisuzualizer.automatonToDot(nfa).getBytes(UTF_8))
                             println(s"Nfa written to $file")
                         } else {
-                            util.AutomataVisuzualizer.displayNfa(nfa)
+                            util.AutomataVisuzualizer.displayAutomaton(nfa)
                         }
                     }
                     diags
