@@ -12,8 +12,8 @@ object Test extends SexyOpt {
 
     def main(args: Array[String]): Unit = {
         parse(args)
-        val debugMode = if (displayGraphs.value) Parigen.DebugMode.DisplayGraphs else Parigen.DebugMode.GraphsToFiles
-        val source = Source.fromFile(filename.value)
+        val debugMode = if (displayGraphs) Parigen.DebugMode.DisplayGraphs else Parigen.DebugMode.GraphsToFiles
+        val source = Source.fromFile(filename)
         val g = try source.mkString finally source.close()
         println("Input:")
         println(g)
