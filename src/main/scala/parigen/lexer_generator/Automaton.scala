@@ -10,6 +10,7 @@ trait Automaton {
     def alphabet: IndexedAlphabet
     def flatTransitions: Iterable[(State, Symbol, State)]
     def isInitialState(state: State): Boolean
+    def name: String
 
     /**
      * If the given state is accepting, this returns the ID of the token that is accepted by this state.

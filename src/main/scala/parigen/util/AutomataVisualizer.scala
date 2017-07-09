@@ -23,10 +23,10 @@ object AutomataVisuzualizer {
             val inputString = if (from == to) s""""$input (${escape(from)})"""" else s""""$input (${escape(from)} - ${escape(to)})""""
             s""""${nodeName(state)}" -> "${nodeName(target)}" [type=s, label=$inputString];"""
         }.mkString("\n")
-        s"digraph automaton {\n$trans\n}"
+        s"digraph ${automaton.name} {\nlabel = ${automaton.name};\n$trans\n}"
     }
 
     def displayAutomaton(automaton: Automaton): Unit = {
-        (Process(Seq("dot", "-Tx11", "-Ksfdp")) #< new ByteArrayInputStream(automatonToDot(automaton).getBytes)).!
+        (Process(Seq("dot", "-Tx11", "-Ksfdp")) #< new ByteArrayInputStream(automatonToDot(automaton).getBytes)).run
     }
 }

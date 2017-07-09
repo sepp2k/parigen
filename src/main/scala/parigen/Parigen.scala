@@ -23,21 +23,25 @@ object Parigen {
                 val diags = Validator.validate(ast)
                 if (diags.exists(_.severity == Validator.Error)) diags
                 else {
-                    val (tokenIDs, nfa) = LexerGenerator.generateLexer(ast)
+                    val lexer = LexerGenerator.generateLexer(ast)
                     if(printStages) {
                         println("Token IDs:")
-                        tokenIDs.foreach(println)
+                        lexer.tokens.foreach(println)
                         println("Alphabet:")
-                        nfa.alphabet.foreach {
+                        lexer.alphabet.foreach {
                             case ((from, to), id) => println(s"$from .. $to -> $id")
                         }
 
                         if (debugMode == DebugMode.GraphsToFiles) {
-                            val file = Files.createTempFile("nfa", ".dot")
-                            Files.write(file, util.AutomataVisuzualizer.automatonToDot(nfa).getBytes(UTF_8))
-                            println(s"Nfa written to $file")
+                            val nfaFile = Files.createTempFile("nfa", ".dot")
+                            Files.write(nfaFile, util.AutomataVisuzualizer.automatonToDot(lexer.nfa).getBytes(UTF_8))
+                            println(s"Nfa written to $nfaFile")
+                            val dfaFile = Files.createTempFile("dfa", ".dot")
+                            Files.write(dfaFile, util.AutomataVisuzualizer.automatonToDot(lexer.dfa).getBytes(UTF_8))
+                            println(s"Dfa written to $dfaFile")
                         } else {
-                            util.AutomataVisuzualizer.displayAutomaton(nfa)
+                            util.AutomataVisuzualizer.displayAutomaton(lexer.nfa)
+                            util.AutomataVisuzualizer.displayAutomaton(lexer.dfa)
                         }
                     }
                     diags

@@ -11,6 +11,7 @@ case class Nfa (
     initialStates: Set[State],
     acceptingStates: Map[State, TokenID]
 ) extends Automaton {
+    val name = "NFA"
     def flatTransitions =
         for((state, outgoing) <- transitions; (sym, targets) <- outgoing; target <- targets)
             yield (state, sym, target)
