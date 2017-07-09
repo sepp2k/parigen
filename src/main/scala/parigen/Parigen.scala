@@ -32,6 +32,8 @@ object Parigen {
                             case ((from, to), id) => println(s"$from .. $to -> $id")
                         }
 
+                        new plang.TypeScriptGenerator(System.out, 4).generate(lexer.code)
+
                         if (debugMode == DebugMode.GraphsToFiles) {
                             val nfaFile = Files.createTempFile("nfa", ".dot")
                             Files.write(nfaFile, util.AutomataVisuzualizer.automatonToDot(lexer.nfa).getBytes(UTF_8))
