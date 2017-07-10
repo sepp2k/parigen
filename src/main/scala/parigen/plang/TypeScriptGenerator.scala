@@ -1,6 +1,7 @@
 package parigen.plang
 
 import java.io.PrintStream
+import scala.collection.mutable
 
 class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
     def generate(mod: PLang.Module): Unit = {
@@ -24,10 +25,49 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
                     generateStatement(statement, indentation + indentationWidth)
                 }
                 println(s"}")
-            case PLang.ObjectTypeDef(name, members) =>
-                println(s"type $name = {")
-                members.foreach { case (memberName, typ) =>
-                    println(s"$memberName: ${translateType(typ)},", extraIndent = 1)
+            case PLang.ClassDef(name, params, body) =>
+                val paramStrings = params.map { case (memberName, typ) => s"$memberName: ${translateType(typ)}"}
+                val inits = mutable.ArrayBuffer[(String, PLang.Expression)]()
+                println(s"class $name {")
+                body.foreach {
+                    case PLang.FunDef(name, params, returnType, body) =>
+                        val paramList = params.map { case (param, typ) => s"$param: ${translateType(typ)}"}.mkString(", ")
+                        println(s"$name($paramList): ${translateType(returnType)} {", extraIndent = 1)
+                        body.foreach { statement =>
+                            generateStatement(statement, indentation + 2 * indentationWidth)
+                        }
+                        println(s"}", extraIndent = 1)
+                    case PLang.VarDef(name, typ, init) =>
+                        println(s"$name: ${translateType(typ)};", extraIndent = 1)
+                        inits += name -> init
+                }
+                paramStrings.foreach { paramString =>
+                    println(s"$paramString;", extraIndent = 1)
+                }
+                println(s"constructor(${paramStrings.mkString(", ")}) {", extraIndent = 1)
+                params.foreach { case (memberName, _) =>
+                    println(s"this.$memberName = $memberName;", extraIndent = 2)
+                }
+                inits.foreach { case (memberName, init) =>
+                    println(s"this.$memberName = ${translateExp(init)};", extraIndent = 2)
+                }
+                println("}", extraIndent = 1)
+                println("}")
+            case PLang.EnumDef(name, members) =>
+                println(s"enum $name {")
+                members.foreach { member =>
+                    println(s"$member,", extraIndent = 1)
+                }
+                println("}")
+            case PLang.While(cond, body) =>
+                println(s"while(${translateExp(cond)}) {")
+                body.foreach(generateStatement(_, indentation + indentationWidth))
+                println("}")
+            case PLang.Switch(exp, body) =>
+                println(s"switch(${translateExp(exp)}) {")
+                body.foreach { case (const, caseBody) =>
+                    println(s"case $const:")
+                    caseBody.foreach(generateStatement(_, indentation + indentationWidth))
                 }
                 println("}")
             case PLang.Return(exp) =>
@@ -53,13 +93,14 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.StringLit(value) => s""""$value""""
             case PLang.CharLit('\'') => s"'\\''"
             case PLang.CharLit(value) => s"'$value'"
-            case PLang.ObjectLit(_, members) => members.map {case (name, value) => s"$name: ${translateExp(value)}"}.mkString("{", ", ", "}")
+            case PLang.Instantiate(className, args) => args.map(translateExp).mkString(s"new $className(", ", ", ")")
             case PLang.Add(lhs, rhs) => s"(${translateExp(lhs)} + ${translateExp(rhs)}"
             case PLang.Eq(lhs, rhs) => s"(${translateExp(lhs)} == ${translateExp(rhs)}"
             case PLang.Lt(lhs, rhs) => s"(${translateExp(lhs)} < ${translateExp(rhs)}"
             case PLang.Gt(lhs, rhs) => s"(${translateExp(lhs)} > ${translateExp(rhs)}"
             case PLang.LtEq(lhs, rhs) => s"(${translateExp(lhs)} <= ${translateExp(rhs)}"
             case PLang.GtEq(lhs, rhs) => s"(${translateExp(lhs)} >= ${translateExp(rhs)}"
+            case PLang.EnumMember(enumName, memberName) => s"$enumName.$memberName"
             case _ => s"/* TODO: $exp */"
         }
     }

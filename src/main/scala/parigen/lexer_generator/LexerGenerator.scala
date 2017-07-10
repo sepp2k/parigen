@@ -14,7 +14,10 @@ object LexerGenerator {
         val tokens = TokenExtractor.extractTokens(grammar)
         val nfa = Nfa.fromRegexes(tokens.values.map(tok => (tok.regex, tok.id)).toList)
         val dfa = Dfa.fromNfa(nfa)
-        val code = CodeGenerator.fromDfa(dfa)
+        val tokenLookup = tokens.map {
+            case (_, tokenInfo) => tokenInfo.id -> tokenInfo.tokenType
+        }
+        val code = CodeGenerator.fromDfa(dfa, tokenLookup)
         Lexer(tokens, nfa, dfa, code)
     }
 }

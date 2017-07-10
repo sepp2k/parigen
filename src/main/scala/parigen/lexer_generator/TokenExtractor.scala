@@ -44,7 +44,7 @@ class TokenExtractor {
 }
 
 object TokenExtractor {
-    def extractTokens(grammar: Ast.Grammar) = {
+    def extractTokens(grammar: Ast.Grammar): Map[TokenType, TokenInfo] = {
         val tokenExtractor = new TokenExtractor
         tokenExtractor.process(grammar)
         tokenExtractor.tokenIDs.toMap

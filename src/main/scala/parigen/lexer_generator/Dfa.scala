@@ -8,6 +8,7 @@ import scala.collection.mutable
 
 case class Dfa(
     alphabet: IndexedAlphabet,
+    states: Seq[State],
     transitions: Transitions,
     initialState: State,
     acceptingStates: Map[State, TokenID]
@@ -20,6 +21,8 @@ case class Dfa(
     def isInitialState(state: State) = state == initialState
 
     def isAccepting(state: State) = acceptingStates.get(state)
+
+    def isFailState(state: State): Boolean = !transitions.isDefinedAt(state)
 }
 
 object Dfa {
@@ -60,6 +63,6 @@ object Dfa {
                 Some(dfaState -> tokenIDs.min)
             }
         }.toMap
-        Dfa(nfa.alphabet, trans, stateMappings(nfa.initialStates), acceptingStates)
+        Dfa(nfa.alphabet, stateMappings.values.toVector, trans, stateMappings(nfa.initialStates), acceptingStates)
     }
 }
