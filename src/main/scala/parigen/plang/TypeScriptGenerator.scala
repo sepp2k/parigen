@@ -66,7 +66,7 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.Switch(exp, body) =>
                 println(s"switch(${translateExp(exp)}) {")
                 body.foreach { case (const, caseBody) =>
-                    println(s"case $const:")
+                    println(s"case ${translateExp(const)}:")
                     caseBody.foreach(generateStatement(_, indentation + indentationWidth))
                 }
                 println("}")
@@ -89,8 +89,10 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
     def translateExp(exp: PLang.Expression): String = {
         exp match {
             case PLang.Var(name) => name
+            case PLang.This => "this"
             case PLang.IntLit(value) => value.toString
             case PLang.StringLit(value) => s""""$value""""
+            case PLang.BoolLit(value) => value.toString
             case PLang.CharLit('\'') => s"'\\''"
             case PLang.CharLit(value) => s"'$value'"
             case PLang.Instantiate(className, args) => args.map(translateExp).mkString(s"new $className(", ", ", ")")
@@ -101,6 +103,8 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.LtEq(lhs, rhs) => s"(${translateExp(lhs)} <= ${translateExp(rhs)}"
             case PLang.GtEq(lhs, rhs) => s"(${translateExp(lhs)} >= ${translateExp(rhs)}"
             case PLang.EnumMember(enumName, memberName) => s"$enumName.$memberName"
+            case PLang.MemberAccess(receiver, memberName) => s"${translateExp(receiver)}.$memberName"
+            case PLang.Subscript(array, index) => s"${translateExp(array)}[${translateExp(index)}]"
             case _ => s"/* TODO: $exp */"
         }
     }

@@ -3,6 +3,10 @@ package parigen.lexer_generator
 import parigen.plang.PLang
 
 object CodeGenerator {
+    val thisSource = PLang.MemberAccess(PLang.This, "source")
+    val thisIndex = PLang.MemberAccess(PLang.This, "index")
+    val thisState = PLang.MemberAccess(PLang.This, "state")
+
     def fromDfa(dfa: Dfa, tokens: Map[TokenInfo.TokenID, TokenInfo.TokenType]): PLang.Module = {
         def stateName(state: Automaton.State): String = s"S_${state.toString.toUpperCase}"
         PLang.Module("lexer", Seq(
@@ -10,7 +14,7 @@ object CodeGenerator {
                 case (id, TokenInfo.Literal(value)) => s"literal_$id /* $value */"
                 case (id, TokenInfo.Named(name)) => s"token_$name"
             } :+ "INVALID"),
-            PLang.EnumDef("State", dfa.states.map(stateName)),
+            PLang.EnumDef("State", dfa.states.map(stateName) :+ "FAIL_STATE"),
             PLang.ClassDef("Lexer", Seq(
                 "source" -> PLang.StringType
             ), Seq(
@@ -20,16 +24,18 @@ object CodeGenerator {
                 PLang.VarDef("lastAcceptingIndex", PLang.IntType, PLang.IntLit(0)),
                 PLang.FunDef("nextToken", Seq("lexer" -> PLang.UserDefinedType("Lexer")), PLang.UserDefinedType("Token"), Seq(
                     PLang.While(PLang.BoolLit(true), Seq(
-                        PLang.Switch(PLang.MemberAccess(PLang.This, "state"), dfa.states.map { state =>
+                        PLang.Switch(thisState, dfa.states.map { state =>
                             PLang.EnumMember("State", stateName(state)) -> Seq(
-                                PLang.Return(PLang.Instantiate("Token", Seq(
-                                    PLang.Var("???"),
-                                    PLang.Var("???"),
-                                    PLang.Var("???"),
-                                    PLang.Var("???")
-                                )))
+                                PLang.Switch(PLang.Subscript(thisSource, thisIndex), Seq())
                             )
-                        })
+                        } :+ PLang.EnumMember("State", "FAIL_STATE") -> Seq(
+                            PLang.Return(PLang.Instantiate("Token", Seq(
+                                PLang.Var("???"),
+                                PLang.Var("???"),
+                                PLang.Var("???"),
+                                PLang.Var("???")
+                            )))
+                        ))
                     ))
                 ))
             )),

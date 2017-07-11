@@ -21,8 +21,6 @@ case class Dfa(
     def isInitialState(state: State) = state == initialState
 
     def isAccepting(state: State) = acceptingStates.get(state)
-
-    def isFailState(state: State): Boolean = !transitions.isDefinedAt(state)
 }
 
 object Dfa {
