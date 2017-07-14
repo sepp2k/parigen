@@ -67,13 +67,15 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
                 println("}")
             case PLang.Switch(exp, default, body @ _*) =>
                 println(s"switch(${translateExp(exp)}) {")
-                body.foreach { case (const, caseBody) =>
-                    println(s"case ${translateExp(const)}:")
+                body.foreach { case (consts, caseBody) =>
+                    consts.foreach(const => println(s"case ${translateExp(const)}:"))
                     caseBody.foreach(generateStatement(_, indentation + indentationWidth))
+                    println("break;", extraIndent = 1)
                 }
                 default.foreach { defaultBody =>
                     println("default:")
                     defaultBody.foreach(generateStatement(_, indentation + indentationWidth))
+                    println("break;", extraIndent = 1)
                 }
                 println("}")
             case PLang.Return(exp) =>

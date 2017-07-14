@@ -7,7 +7,7 @@ object PLang {
 
     sealed abstract class Statement
     case class While(cond: Expression, body: Statement*) extends Statement
-    case class Switch(exp: Expression, default: Option[Seq[Statement]], body: (Constant, Seq[Statement])*) extends Statement
+    case class Switch(exp: Expression, default: Option[Seq[Statement]], body: (Seq[Constant], Seq[Statement])*) extends Statement
     case class Return(expr: Expression) extends Statement
     case class Assignment(lexpr: Expression, expr: Expression) extends Statement
     case class ExpressionStatement(expr: Expression) extends Statement
