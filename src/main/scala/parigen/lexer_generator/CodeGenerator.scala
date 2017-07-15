@@ -14,8 +14,8 @@ object CodeGenerator {
         val ((lowChar, highChar), id) = alphabet(mid)
         val elseCase: Statement = if (low >= high) Return(-1) else {
             if (lowChar == '\u0000') equivalenceClasses(alphabet, mid + 1, high)
-            else if (highChar == '\uffff') equivalenceClasses(alphabet, low, mid)
-            else IfThenElse(Var("c") < lowChar, Seq(equivalenceClasses(alphabet, low, mid)), Seq(equivalenceClasses(alphabet, mid + 1, high)))
+            else if (highChar == '\uffff') equivalenceClasses(alphabet, low, mid - 1)
+            else IfThenElse(Var("c") < lowChar, Seq(equivalenceClasses(alphabet, low, mid - 1)), Seq(equivalenceClasses(alphabet, mid + 1, high)))
         }
         val cond =
             if (lowChar == highChar) Var("c") === lowChar
