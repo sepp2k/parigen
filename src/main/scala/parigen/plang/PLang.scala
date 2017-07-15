@@ -6,6 +6,7 @@ object PLang {
     case class Module(name: String, body: Definition*)
 
     sealed abstract class Statement
+    case class IfThenElse(cond: Expression, thenCase: Seq[Statement], elseCase: Seq[Statement]) extends Statement
     case class While(cond: Expression, body: Statement*) extends Statement
     case class Switch(exp: Expression, default: Option[Seq[Statement]], body: (Seq[Constant], Seq[Statement])*) extends Statement
     case class Return(expr: Expression) extends Statement
@@ -31,6 +32,7 @@ object PLang {
     case object IntType extends Type
     case object StringType extends Type
     case object CharType extends Type
+    case object BoolType extends Type
     case class UserDefinedType(name: String) extends Type
 
     sealed abstract class Expression {
@@ -41,8 +43,10 @@ object PLang {
         def >(other: Expression) = Gt(this, other)
         def <=(other: Expression) = LtEq(this, other)
         def >=(other: Expression) = GtEq(this, other)
+        def &&&(other: Expression) = And(this, other)
+        def |||(other: Expression) = Or(this, other)
         def apply(args: Expression*) = FunCall(this, args)
-        def sub(index: Expression) = Subscript(this, index)
+        def charAt(index: Expression) = StringSubscript(this, index)
         def member(memberName: String) = MemberAccess(this, memberName)
     }
     case class Var(name: String) extends Expression
@@ -54,8 +58,10 @@ object PLang {
     case class Gt(lhs: Expression, rhs: Expression) extends Expression
     case class LtEq(lhs: Expression, rhs: Expression) extends Expression
     case class GtEq(lhs: Expression, rhs: Expression) extends Expression
+    case class Or(lhs: Expression, rhs: Expression) extends Expression
+    case class And(lhs: Expression, rhs: Expression) extends Expression
     case class FunCall(fun: Expression, args: Seq[Expression]) extends Expression
-    case class Subscript(indexable: Expression, index: Expression) extends Expression
+    case class StringSubscript(string: Expression, index: Expression) extends Expression
     case class MemberAccess(receiver: Expression, memberName: String) extends Expression
 
     sealed abstract class Constant extends Expression

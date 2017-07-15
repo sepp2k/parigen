@@ -55,7 +55,7 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
                 }
                 println("}", extraIndent = 1)
                 println("}")
-            case PLang.EnumDef(name, members) =>
+            case PLang.EnumDef(name, members @ _*) =>
                 println(s"enum $name {")
                 members.foreach { member =>
                     println(s"$member,", extraIndent = 1)
@@ -65,17 +65,25 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
                 println(s"while(${translateExp(cond)}) {")
                 body.foreach(generateStatement(_, indentation + indentationWidth))
                 println("}")
+            case PLang.IfThenElse(cond, thenCase, elseCase) =>
+                println(s"if (${translateExp(cond)}) {")
+                thenCase.foreach(generateStatement(_, indentation + indentationWidth))
+                println("} else {")
+                elseCase.foreach(generateStatement(_, indentation + indentationWidth))
+                println("}")
             case PLang.Switch(exp, default, body @ _*) =>
                 println(s"switch(${translateExp(exp)}) {")
                 body.foreach { case (consts, caseBody) =>
                     consts.foreach(const => println(s"case ${translateExp(const)}:"))
                     caseBody.foreach(generateStatement(_, indentation + indentationWidth))
-                    println("break;", extraIndent = 1)
+                    // Don't generate breaks after returns to avoid dead code errors
+                    if(!caseBody.last.isInstanceOf[PLang.Return]) println("break;", extraIndent = 1)
                 }
                 default.foreach { defaultBody =>
                     println("default:")
                     defaultBody.foreach(generateStatement(_, indentation + indentationWidth))
-                    println("break;", extraIndent = 1)
+                    // Don't generate breaks after returns to avoid dead code errors
+                    if(!defaultBody.last.isInstanceOf[PLang.Return]) println("break;", extraIndent = 1)
                 }
                 println("}")
             case PLang.Return(exp) =>
@@ -90,6 +98,7 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.StringType => "string"
             case PLang.IntType => "number"
             case PLang.CharType => "string"
+            case PLang.BoolType => "boolean"
             case PLang.UserDefinedType(name) => name
         }
     }
@@ -102,6 +111,8 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.StringLit(value) => s""""$value""""
             case PLang.BoolLit(value) => value.toString
             case PLang.CharLit('\'') => s"'\\''"
+            case PLang.CharLit('\\') => s"'\\\\'"
+            case PLang.CharLit(value) if value.isControl => "'\\%04x'".format(value.toInt)
             case PLang.CharLit(value) => s"'$value'"
             case PLang.Instantiate(className, args @ _*) => args.map(translateExp).mkString(s"new $className(", ", ", ")")
             case PLang.Add(lhs, rhs) => s"(${translateExp(lhs)} + ${translateExp(rhs)})"
@@ -110,9 +121,11 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.Gt(lhs, rhs) => s"(${translateExp(lhs)} > ${translateExp(rhs)})"
             case PLang.LtEq(lhs, rhs) => s"(${translateExp(lhs)} <= ${translateExp(rhs)})"
             case PLang.GtEq(lhs, rhs) => s"(${translateExp(lhs)} >= ${translateExp(rhs)})"
+            case PLang.And(lhs, rhs) => s"(${translateExp(lhs)} && ${translateExp(rhs)})"
+            case PLang.Or(lhs, rhs) => s"(${translateExp(lhs)} || ${translateExp(rhs)})"
             case PLang.EnumMember(enumName, memberName) => s"$enumName.$memberName"
             case PLang.MemberAccess(receiver, memberName) => s"${translateExp(receiver)}.$memberName"
-            case PLang.Subscript(array, index) => s"${translateExp(array)}[${translateExp(index)}]"
+            case PLang.StringSubscript(string, index) => s"${translateExp(string)}.charAt(${translateExp(index)})"
             case PLang.FunCall(fun, args) => s"${translateExp(fun)}(${args.map(translateExp).mkString(", ")})"
             case _ => s"/* TODO: $exp */"
         }
