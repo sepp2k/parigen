@@ -45,7 +45,8 @@ object CodeGenerator {
             classDef("Token",
                 "kind" -> UserDefinedType("TokenType"),
                 "fromIndex" -> IntType,
-                "toIndex" -> IntType
+                "toIndex" -> IntType,
+                "value" -> StringType
             )(),
             classDef("Lexer", "source" -> StringType)(
                 VarDef("index", IntType, 0),
@@ -82,7 +83,8 @@ object CodeGenerator {
                             Return(Instantiate("Token",
                                 Var("lastAccepting"),
                                 Var("startIndex"),
-                                Var("lastAcceptingIndex")
+                                Var("lastAcceptingIndex"),
+                                thisSource.member("substring")(Var("startIndex"), Var("lastAcceptingIndex") + 1)
                             ))
                         ) :_*)
                     )

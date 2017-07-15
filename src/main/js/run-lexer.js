@@ -6,5 +6,5 @@ var lexerMod = require(lexerFile);
 var lexer = new lexerMod.Lexer(fs.readFileSync(process.argv[3], "UTF-8"));
 while (lexer.hasNext()) {
     var token = lexer.nextToken();
-    console.log(lexerMod.TokenType[token.kind] + " (" + token.fromIndex + " - " + token.toIndex + ")");
+    console.log(lexerMod.TokenType[token.kind] + " (" + token.fromIndex + " - " + token.toIndex + "): " + token.value);
 }
