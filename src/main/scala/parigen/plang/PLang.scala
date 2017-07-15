@@ -37,6 +37,7 @@ object PLang {
 
     sealed abstract class Expression {
         def +(other: Expression) = Add(this, other)
+        def -(other: Expression) = Sub(this, other)
         def ===(other: Expression) = Eq(this, other)
         def :=(other: Expression) = Assignment(this, other)
         def <(other: Expression) = Lt(this, other)
@@ -53,6 +54,7 @@ object PLang {
     case object This extends Expression
     case class Instantiate(className: String, params: Expression*) extends Expression
     case class Add(lhs: Expression, rhs: Expression) extends Expression
+    case class Sub(lhs: Expression, rhs: Expression) extends Expression
     case class Eq(lhs: Expression, rhs: Expression) extends Expression
     case class Lt(lhs: Expression, rhs: Expression) extends Expression
     case class Gt(lhs: Expression, rhs: Expression) extends Expression

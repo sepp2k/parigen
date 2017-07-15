@@ -127,6 +127,7 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.CharLit(value) => s"'${escapeChar(value)}'"
             case PLang.Instantiate(className, args @ _*) => args.map(translateExp).mkString(s"new $className(", ", ", ")")
             case PLang.Add(lhs, rhs) => s"(${translateExp(lhs)} + ${translateExp(rhs)})"
+            case PLang.Sub(lhs, rhs) => s"(${translateExp(lhs)} - ${translateExp(rhs)})"
             case PLang.Eq(lhs, rhs) => s"(${translateExp(lhs)} == ${translateExp(rhs)})"
             case PLang.Lt(lhs, rhs) => s"(${translateExp(lhs)} < ${translateExp(rhs)})"
             case PLang.Gt(lhs, rhs) => s"(${translateExp(lhs)} > ${translateExp(rhs)})"

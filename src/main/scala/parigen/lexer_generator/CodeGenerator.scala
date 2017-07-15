@@ -70,7 +70,7 @@ object CodeGenerator {
                                     case None => Seq(switch, inc)
                                     case Some(tokenID) => Seq(
                                         Var("lastAccepting") := enumToken(tokenID),
-                                        Var("lastAcceptingIndex") := thisIndex,
+                                        Var("lastAcceptingIndex") := thisIndex - 1,
                                         switch,
                                         inc
                                     )
