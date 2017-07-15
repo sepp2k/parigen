@@ -112,7 +112,7 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.BoolLit(value) => value.toString
             case PLang.CharLit('\'') => s"'\\''"
             case PLang.CharLit('\\') => s"'\\\\'"
-            case PLang.CharLit(value) if value.isControl => "'\\%04x'".format(value.toInt)
+            case PLang.CharLit(value) if value.isControl => "'\\u%04x'".format(value.toInt)
             case PLang.CharLit(value) => s"'$value'"
             case PLang.Instantiate(className, args @ _*) => args.map(translateExp).mkString(s"new $className(", ", ", ")")
             case PLang.Add(lhs, rhs) => s"(${translateExp(lhs)} + ${translateExp(rhs)})"
