@@ -21,8 +21,20 @@ object Ast {
     case class RuleName(name: String) extends Expression {
         override def toString = name
     }
+
+    val escapeSequences = Map(
+        'n' -> '\n', 'r' -> '\r', 't' -> '\t'
+    ).orElse({ case c => c } : PartialFunction[Char, Char])
+
     case class StringLit(string: String) extends Expression {
         override def toString = s""""$string"""" // Fix VS code syntax highlighting: "
+    }
+
+    object StringLit {
+        def parse(str: String): StringLit = {
+            val parsed = """\\(.)""".r.replaceAllIn(str.substring(1, str.length - 1), m => if (m.group(1) == "\\") "\\\\" else escapeSequences(m.group(1).charAt(0)).toString)
+            StringLit(parsed)
+        }
     }
 
     val epsilon = StringLit("")
@@ -48,7 +60,7 @@ object Ast {
                 var ch = str.charAt(i)
                 if(ch == '\\') {
                     i += 1
-                    ch = str.charAt(i)
+                    ch = escapeSequences(str.charAt(i))
                 }
                 i += 1
                 if(str.charAt(i) == '-' && i + 1 < str.length - 1) {
@@ -56,7 +68,7 @@ object Ast {
                     var ch2 = str.charAt(i)
                     if(ch2 == '\\') {
                         i += 1
-                        ch2 = str.charAt(i)
+                        ch2 = escapeSequences(str.charAt(i))
                     }
                     i += 1
                     ranges += ch -> ch2

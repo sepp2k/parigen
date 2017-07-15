@@ -48,7 +48,7 @@ object Parser extends RegexParsers {
             id => Ast.RuleName(id)
         } |
         STRING_LIT ^^ {
-            str => Ast.StringLit(str)
+            str => Ast.StringLit.parse(str)
         } |
         CHARACTER_CLASS ^^ {
             cc => Ast.CharacterClass.parse(cc)
@@ -58,9 +58,7 @@ object Parser extends RegexParsers {
 
     def CHARACTER_CLASS = """\[(\\.|[^]])*\]""".r
     def ID = "[a-zA-Z_][a-zA-Z_0-9]*".r
-    def STRING_LIT = """"(\\.|[^"])*"""".r ^^ {
-        str => str.substring(1, str.length - 1).replaceAll("\\\\(.)", "$1")
-    }
+    def STRING_LIT = """"(\\.|[^"\\])*"""".r
 
     def parse(str: String) = parseAll(grammar, str)
 }

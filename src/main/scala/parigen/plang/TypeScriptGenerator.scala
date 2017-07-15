@@ -104,17 +104,27 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
         }
     }
 
+    val IsAsciiPrintable = """[\\\[\]\-_,.;:#'"+*~^!"$%&/(){}=?`@<>|a-zA-Z0-9]""".r
+
+    def escapeChar(c: Char) = c match {
+        case '\\' => "\\\\"
+        case '"' => "\\\""
+        case '\'' => "\\'"
+        case '\n' => "\\n"
+        case '\r' => "\\r"
+        case '\t' => "\\t"
+        case IsAsciiPrintable() => c.toString
+        case c => "\\u%04x".format(c.toInt)
+    }
+
     def translateExp(exp: PLang.Expression): String = {
         exp match {
             case PLang.Var(name) => name
             case PLang.This => "this"
             case PLang.IntLit(value) => value.toString
-            case PLang.StringLit(value) => s""""$value""""
+            case PLang.StringLit(value) => s""""${value.map(escapeChar)}""""
             case PLang.BoolLit(value) => value.toString
-            case PLang.CharLit('\'') => s"'\\''"
-            case PLang.CharLit('\\') => s"'\\\\'"
-            case PLang.CharLit(value) if value.isControl => "'\\u%04x'".format(value.toInt)
-            case PLang.CharLit(value) => s"'$value'"
+            case PLang.CharLit(value) => s"'${escapeChar(value)}'"
             case PLang.Instantiate(className, args @ _*) => args.map(translateExp).mkString(s"new $className(", ", ", ")")
             case PLang.Add(lhs, rhs) => s"(${translateExp(lhs)} + ${translateExp(rhs)})"
             case PLang.Eq(lhs, rhs) => s"(${translateExp(lhs)} == ${translateExp(rhs)})"
