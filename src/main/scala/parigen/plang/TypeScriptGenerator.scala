@@ -7,22 +7,23 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
     def generate(mod: PLang.Module): Unit = {
         out.println(s"// module ${mod.name}")
         mod.body.foreach {definition =>
-            generateStatement(definition, 0)
+            generateStatement(definition, 0, toplevel = true)
         }
     }
 
-    def generateStatement(statement: PLang.Statement, indentation: Int): Unit = {
+    def generateStatement(statement: PLang.Statement, indentation: Int, toplevel: Boolean = false): Unit = {
         def println(line: String, extraIndent: Int = 0): Unit = {
             out.println(s"${" " * (indentation + extraIndent * indentationWidth)}$line")
         }
+        val export = if (toplevel) "export " else ""
         statement match {
             case PLang.VarDef(name, typ, init) =>
-                println(s"let $name: ${translateType(typ)} = ${translateExp(init)};")
+                println(s"${export}let $name: ${translateType(typ)} = ${translateExp(init)};")
             case PLang.Assignment(lhs, rhs) =>
                 println(s"${translateExp(lhs)} = ${translateExp(rhs)};")
             case PLang.FunDef(name, returnType, params, body) =>
                 val paramList = params.map { case (param, typ) => s"$param: ${translateType(typ)}"}.mkString(", ")
-                println(s"function $name($paramList): ${translateType(returnType)} {")
+                println(s"${export}function $name($paramList): ${translateType(returnType)} {")
                 body.foreach { statement =>
                     generateStatement(statement, indentation + indentationWidth)
                 }
@@ -30,7 +31,7 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
             case PLang.ClassDef(name, params, body) =>
                 val paramStrings = params.map { case (memberName, typ) => s"$memberName: ${translateType(typ)}"}
                 val inits = mutable.ArrayBuffer[(String, PLang.Expression)]()
-                println(s"class $name {")
+                println(s"${export}class $name {")
                 body.foreach {
                     case PLang.FunDef(name, returnType, params, body) =>
                         val paramList = params.map { case (param, typ) => s"$param: ${translateType(typ)}"}.mkString(", ")
@@ -56,7 +57,7 @@ class TypeScriptGenerator(out: PrintStream, indentationWidth: Int) {
                 println("}", extraIndent = 1)
                 println("}")
             case PLang.EnumDef(name, members @ _*) =>
-                println(s"enum $name {")
+                println(s"${export}enum $name {")
                 members.foreach { member =>
                     println(s"$member,", extraIndent = 1)
                 }
