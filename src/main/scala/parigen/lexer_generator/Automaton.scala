@@ -110,8 +110,8 @@ object Automaton {
     def invert(alpha: Alphabet) = {
         if (alpha.isEmpty) SortedSet(Char.MinValue -> Char.MaxValue)
         else {
-            alpha.zip(alpha.tail).map {
-                case ((_, end1), (start2, _)) => succ(end1) -> pred(start2)
+            alpha.zip(alpha.tail).collect {
+                case ((_, end1), (start2, _)) if succ(end1) != start2 => succ(end1) -> pred(start2)
             } + (Char.MinValue -> pred(alpha.min._1)) + (succ(alpha.max._2) -> Char.MaxValue)
         }
     }
