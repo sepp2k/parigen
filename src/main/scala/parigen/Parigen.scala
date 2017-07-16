@@ -41,10 +41,10 @@ object Parigen {
                         util.AutomataVisuzualizer.displayAutomaton(lexer.nfa)
                         util.AutomataVisuzualizer.displayAutomaton(lexer.dfa)
                     }
-                    val outFile = new PrintStream(s"$outDir/lexer.ts")
-                    new plang.TypeScriptGenerator(outFile, 4).generate(lexer.code)
+                    val outFile = new PrintStream(s"$outDir/lexer.scala")
+                    new plang.ScalaGenerator("TODO", outFile, 4).generate(lexer.code)
                     outFile.close
-                    println(s"Lexer written to $outDir/lexer.ts")
+                    println(s"Lexer written to $outDir/lexer.scala")
                     diags
                 }
             case Parser.NoSuccess(message, rest) =>
