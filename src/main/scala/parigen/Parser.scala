@@ -56,7 +56,7 @@ object Parser extends RegexParsers {
         "." ^^^ Ast.CharacterClass(Seq(), negated = true) |
         "(" ~> expression <~ ")"
 
-    def CHARACTER_CLASS = """\[(\\.|[^]])*\]""".r
+    def CHARACTER_CLASS = """\[(\\.|[^]\\])*\]""".r
     def ID = "[a-zA-Z_][a-zA-Z_0-9]*".r
     def STRING_LIT = """"(\\.|[^"\\])*"""".r
 
