@@ -17,7 +17,7 @@ object LexerGenerator {
         val tokenLookup = tokens.map {
             case (_, tokenInfo) => tokenInfo.id -> tokenInfo.tokenType
         }
-        val code = CodeGenerator.fromDfa(dfa, tokenLookup)
+        val code = PLangGenerator.fromDfa(dfa, tokenLookup)
         Lexer(tokens, nfa, dfa, code)
     }
 }

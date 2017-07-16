@@ -2,7 +2,7 @@ package parigen.lexer_generator
 
 import parigen.plang.PLang._
 
-object CodeGenerator {
+object PLangGenerator {
     val thisSource = MemberAccess(This, "source")
     val thisIndex = MemberAccess(This, "index")
     val thisState = MemberAccess(This, "state")
