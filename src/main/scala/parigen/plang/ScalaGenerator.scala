@@ -27,9 +27,6 @@ class ScalaGenerator(packageName: String, out: PrintStream, indentationWidth: In
                 body.foreach { statement =>
                     generateStatement(statement, indentation + indentationWidth)
                 }
-                // Add error at the end of the function to avoid type errors by the Scala compiler
-                // Since PLai functions should always reach a return statement, this error should never be reached
-                println("sys.error(\"Missing return statement\")", extraIndent = 1)
                 println(s"}")
             case PLang.ClassDef(name, params, body) =>
                 val paramsString = params.map { case (memberName, typ) => s"$memberName: ${translateType(typ)}"}.mkString(", ")

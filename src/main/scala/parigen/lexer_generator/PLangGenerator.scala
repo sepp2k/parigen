@@ -52,12 +52,12 @@ object PLangGenerator {
                 VarDef("index", IntType, 0),
                 VarDef("startIndex", IntType, 0),
                 VarDef("state", UserDefinedType("State"), EnumMember("State", stateName(dfa.initialState))),
-                funDef("hasNext", BoolType)(Return(thisIndex < MemberAccess(thisSource, "length"))),
+                funDef("hasNext", BoolType)(Return(thisIndex < (thisSource member "length"))),
                 funDef("nextToken", UserDefinedType("Token"))(
                     VarDef("startIndex", IntType, thisIndex),
                     VarDef("lastAccepting", UserDefinedType("TokenType"), EnumMember("TokenType", "INVALID")),
                     VarDef("lastAcceptingIndex", IntType, thisIndex),
-                    While(BoolLit(true),
+                    While(thisIndex < (thisSource member "length"),
                         Switch(thisState, None, dfa.states.map { state =>
                             Seq(EnumMember("State", stateName(state))) -> {
                                 val switch = Switch(Var("equivalenceClassFor")(thisSource charAt thisIndex), Some(Seq(thisState := failState)),
@@ -87,7 +87,13 @@ object PLangGenerator {
                                 thisSource.member("substring")(Var("startIndex"), Var("lastAcceptingIndex") + 1)
                             ))
                         ) :_*)
-                    )
+                    ),
+                    Return(Instantiate("Token",
+                        Var("lastAccepting"),
+                        Var("startIndex"),
+                        Var("lastAcceptingIndex"),
+                        thisSource.member("substring")(Var("startIndex"), Var("lastAcceptingIndex") + 1)
+                    ))
                 )
             )
         )
