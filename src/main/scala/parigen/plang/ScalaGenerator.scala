@@ -51,7 +51,7 @@ class ScalaGenerator(packageName: String, out: PrintStream, indentationWidth: In
             case PLang.Switch(exp, default, body @ _*) =>
                 println(s"${translateExp(exp)} match {")
                 body.foreach { case (consts, caseBody) =>
-                    consts.foreach(const => println(s"case ${translateExp(const)} =>"))
+                    println(consts.map(translateExp).mkString("case ", " | ", " =>"))
                     caseBody.foreach(generateStatement(_, indentation + indentationWidth))
                 }
                 default.foreach { defaultBody =>
