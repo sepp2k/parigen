@@ -19,11 +19,18 @@ object Main extends SexyOpt {
 
     def main(args: Array[String]): Unit = {
         parse(args)
+        val language = target.value match {
+            case "scala" => Parigen.Scala
+            case "typescript" => Parigen.TypeScript
+            case _ =>
+                System.err.println(s"Unsupported language: $target")
+                sys.exit(1)
+        }
         val source = Source.fromFile(filename)
         val g = try source.mkString finally source.close()
         val debug = Parigen.DebugOptions(writeGraphs = writeGraphs, displayGraphs = displayGraphs, printAst = printAst,
                                          printAlphabet = printAlphabet, printTokens = printTokens)
-        val diags = Parigen.compile(g, outDir, debug)
+        val diags = Parigen.compile(g, outDir, language, packageName, debug)
         diags.foreach(System.err.println)
     }
 }

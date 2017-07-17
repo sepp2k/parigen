@@ -7,8 +7,11 @@ import lexer_generator.LexerGenerator
 
 object Parigen {
     case class DebugOptions(writeGraphs: Boolean, displayGraphs: Boolean, printAst: Boolean, printAlphabet: Boolean, printTokens: Boolean)
+    sealed abstract class Language
+    case object Scala extends Language
+    case object TypeScript extends Language
 
-    def compile(src: String, outDir: String, debug: DebugOptions) = {
+    def compile(src: String, outDir: String, language: Language, packageName: Option[String], debug: DebugOptions) = {
         Parser.parse(src) match {
             case Parser.Success(ast, _) =>
                 if (debug.printAst) {
@@ -41,11 +44,20 @@ object Parigen {
                         util.AutomataVisuzualizer.displayAutomaton(lexer.nfa)
                         util.AutomataVisuzualizer.displayAutomaton(lexer.dfa)
                     }
-                    val outFile = new PrintStream(s"$outDir/lexer.scala")
-                    new plang.ScalaGenerator("TODO", outFile, 4).generate(lexer.code)
-                    outFile.close
-                    println(s"Lexer written to $outDir/lexer.scala")
-                    diags
+                    language match {
+                        case Scala =>
+                            val outFile = new PrintStream(s"$outDir/Lexer.scala")
+                            new plang.ScalaGenerator(outFile, 4).generate(lexer.code, packageName)
+                            outFile.close
+                            println(s"Lexer written to $outDir/Lexer.scala")
+                            diags
+                        case TypeScript =>
+                            val outFile = new PrintStream(s"$outDir/lexer.ts")
+                            new plang.TypeScriptGenerator(outFile, 4).generate(lexer.code)
+                            outFile.close
+                            println(s"Lexer written to $outDir/lexer.ts")
+                            diags
+                    }
                 }
             case Parser.NoSuccess(message, rest) =>
                 List( Validator.Diagnostic( Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message" ))

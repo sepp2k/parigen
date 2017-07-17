@@ -2,9 +2,9 @@ package parigen.plang
 
 import java.io.PrintStream
 
-class ScalaGenerator(packageName: String, out: PrintStream, indentationWidth: Int) {
-    def generate(mod: PLang.Module): Unit = {
-        out.println(s"package $packageName")
+class ScalaGenerator(out: PrintStream, indentationWidth: Int) {
+    def generate(mod: PLang.Module, packageName: Option[String]): Unit = {
+        packageName.foreach { pn => out.println(s"package $pn") }
         out.println(s"object ${mod.name} {")
         mod.body.foreach {definition =>
             generateStatement(definition, indentationWidth)
