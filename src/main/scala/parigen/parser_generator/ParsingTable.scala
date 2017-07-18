@@ -1,0 +1,3 @@
+package parigen.parser_generator
+
+class ParsingTable

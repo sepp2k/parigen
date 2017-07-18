@@ -4,9 +4,10 @@ import java.nio.file.Files
 import java.nio.charset.StandardCharsets.UTF_8
 import java.io.PrintStream
 import lexer_generator.LexerGenerator
+import parser_generator.ParserGenerator
 
 object Parigen {
-    case class DebugOptions(writeGraphs: Boolean, displayGraphs: Boolean, printAst: Boolean, printAlphabet: Boolean, printTokens: Boolean)
+    case class DebugOptions(writeGraphs: Boolean, displayGraphs: Boolean, printAst: Boolean, printAlphabet: Boolean, printTokens: Boolean, printFirstSets: Boolean)
     sealed abstract class Language
     case object Scala extends Language
     case object TypeScript extends Language
@@ -50,14 +51,15 @@ object Parigen {
                             new plang.ScalaGenerator(outFile, 4).generate(lexer.code, packageName)
                             outFile.close
                             println(s"Lexer written to $outDir/Lexer.scala")
-                            diags
                         case TypeScript =>
                             val outFile = new PrintStream(s"$outDir/lexer.ts")
                             new plang.TypeScriptGenerator(outFile, 4).generate(lexer.code)
                             outFile.close
                             println(s"Lexer written to $outDir/lexer.ts")
-                            diags
                     }
+                    val parser = ParserGenerator.generateParser(ast, lexer.tokens)
+                    if (debug.printFirstSets) println(parser.firstSets)
+                    diags
                 }
             case Parser.NoSuccess(message, rest) =>
                 List( Validator.Diagnostic( Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message" ))
