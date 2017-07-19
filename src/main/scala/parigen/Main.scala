@@ -14,7 +14,7 @@ object Main extends SexyOpt {
     val printTokens = flag("print-tokens", "Print the Tokens' names and IDs to the screen for debugging purposes")
     val printFirstSets = flag("print-first-sets", "Print the first sets of the grammar's non-terminals to the screen for debugging purposes")
     val outDir = option("out-dir", 'o', "The directory in which the generated source files will be placed (default: the current directory)", ".")
-    val target = option("target", 't', "The target language for code generation (default: scala; available: typescript, scala)", "scala")
+    val target = option("target", 't', "The target language for code generation (default: typescript; available: typescript, scala)", "typescript")
     val packageName = option("package", 'p', "The package to generate code into")
     val filename = optionalPosArg("filename", "The name of the file containing the parigen grammar.", "src/main/parigen/parigen.parigen")
 

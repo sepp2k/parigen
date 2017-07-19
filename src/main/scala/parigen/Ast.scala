@@ -27,7 +27,7 @@ object Ast {
     ).orElse({ case c => c } : PartialFunction[Char, Char])
 
     case class StringLit(string: String) extends Expression {
-        override def toString = s""""$string"""" // Fix VS code syntax highlighting: "
+        override def toString = s""""$string""""
     }
 
     object StringLit {
