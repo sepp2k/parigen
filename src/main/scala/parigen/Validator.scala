@@ -34,7 +34,7 @@ object Validator {
         case Ast.Or(lhs, rhs) =>
             validateExpression(name, flags, rhs, validateExpression(name, flags, lhs, acc))
 
-        case Ast.Concattenation(lhs, rhs) =>
+        case Ast.Concatenation(lhs, rhs) =>
             validateExpression(name, flags, rhs, validateExpression(name, flags, lhs, acc))
 
         case Ast.KleeneStar(Ast.StringLit("")) =>

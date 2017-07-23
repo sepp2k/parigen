@@ -38,7 +38,7 @@ class ParserGenerator(grammar: Ast.Grammar, tokens: Map[TokenInfo.TokenType, Tok
                 case Some(tokenInfo) => Set(Some(tokenInfo.id))
                 case None => firstSet(nonTerminals(name))
             }
-        case Ast.Concattenation(lhs, rhs) =>
+        case Ast.Concatenation(lhs, rhs) =>
             val lhsFirstSet = firstSet(lhs)
             if (lhsFirstSet.contains(None)) (lhsFirstSet - None) ++ firstSet(rhs)
             else lhsFirstSet

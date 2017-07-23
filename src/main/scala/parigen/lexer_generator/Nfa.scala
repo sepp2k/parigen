@@ -82,7 +82,7 @@ object Nfa {
             (inner concat inner).copy(acceptingStates = accepting)
         case Ast.Or(lhs, rhs) =>
             fromRegex(lhs, tokenID, alphabet) or fromRegex(rhs, tokenID, alphabet)
-        case Ast.Concattenation(lhs, rhs) =>
+        case Ast.Concatenation(lhs, rhs) =>
             fromRegex(lhs, tokenID, alphabet) concat fromRegex(rhs, tokenID, alphabet)
         case Ast.RuleName(_) =>
             sys.error("Rule name in regex should have been rejected.")

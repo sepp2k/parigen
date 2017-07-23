@@ -34,7 +34,7 @@ class TokenExtractor {
             case Ast.Or(lhs, rhs) =>
                 findStringLits(lhs)
                 findStringLits(rhs)
-            case Ast.Concattenation(lhs, rhs) =>
+            case Ast.Concatenation(lhs, rhs) =>
                 findStringLits(lhs)
                 findStringLits(rhs)
             case Ast.KleeneStar(arg) =>

@@ -20,7 +20,7 @@ object Parser extends RegexParsers {
 
     def sequence =
         quantifiedExpression.+ ^^ {
-            exps => exps.reduceLeft(Ast.Concattenation)
+            exps => exps.reduceLeft(Ast.Concatenation)
         } |
         success(Ast.epsilon)
 
@@ -29,7 +29,7 @@ object Parser extends RegexParsers {
             case exp ~ Some(Star) =>
                 Ast.KleeneStar(exp)
             case exp ~ Some(Plus) =>
-                Ast.Concattenation(exp, Ast.KleeneStar(exp))
+                Ast.Concatenation(exp, Ast.KleeneStar(exp))
             case exp ~ Some(Optional) =>
                 Ast.Or(exp, Ast.epsilon)
             case exp ~ None =>

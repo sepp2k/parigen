@@ -127,7 +127,7 @@ object Automaton {
             extractAlphabet(arg)
         case Ast.Or(lhs, rhs) =>
             mergeAlphabets(extractAlphabet(lhs), extractAlphabet(rhs), emptyAlphabet)
-        case Ast.Concattenation(lhs, rhs) =>
+        case Ast.Concatenation(lhs, rhs) =>
             mergeAlphabets(extractAlphabet(lhs), extractAlphabet(rhs), emptyAlphabet)
         case Ast.RuleName(_) =>
             sys.error("Rule name in regex should have been rejected.")

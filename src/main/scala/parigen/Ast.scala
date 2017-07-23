@@ -83,7 +83,7 @@ object Ast {
     case class Or(lhs: Expression, rhs: Expression) extends Expression {
         override def toString = s"($lhs | $rhs)"
     }
-    case class Concattenation(lhs: Expression, rhs: Expression) extends Expression {
+    case class Concatenation(lhs: Expression, rhs: Expression) extends Expression {
         override def toString = s"($lhs $rhs)"
     }
     case class KleeneStar(arg: Expression) extends Expression {
