@@ -7,7 +7,8 @@ import lexer_generator.LexerGenerator
 import parser_generator.ParserGenerator
 
 object Parigen {
-    case class DebugOptions(writeGraphs: Boolean, displayGraphs: Boolean, printAst: Boolean, printAlphabet: Boolean, printTokens: Boolean, printFirstSets: Boolean)
+    case class DebugOptions(writeGraphs: Boolean, displayGraphs: Boolean, printAst: Boolean, printSimplifiedGrammar: Boolean,
+                            printAlphabet: Boolean, printTokens: Boolean, printFirstSets: Boolean)
     sealed abstract class Language
     case object Scala extends Language
     case object TypeScript extends Language
@@ -22,6 +23,11 @@ object Parigen {
                 val diags = Validator.validate(ast)
                 if (diags.exists(_.severity == Validator.Error)) diags
                 else {
+                    val simplifiedGrammar = SimplifiedGrammar.fromAst(ast)
+                    if (debug.printSimplifiedGrammar) {
+                        println("Simplified grammar:")
+                        println(simplifiedGrammar)
+                    }
                     val lexer = LexerGenerator.generateLexer(ast)
                     if (debug.printTokens) {
                         println("Token IDs:")

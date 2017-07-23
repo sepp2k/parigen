@@ -10,6 +10,7 @@ object Main extends SexyOpt {
     val writeGraphs = flag("write-graphs", "Write the graphs of the generated automata to temporary dot files for debugging purposes")
     val displayGraphs = flag("display-graphs", "Display the graphs of the generated automata directly using `dot -Tx11` (requires GraphViz and X11)")
     val printAst = flag("print-ast", "Print the AST of the input grammar to the screen for debugging purposes")
+    val printSimplifiedGrammar = flag("print-simplified-grammar", "Prints the simplified grammar to the screen for debugging purposes")
     val printAlphabet = flag("print-alphabet", "Print the generated alphabet mapping to the screen for debugging purposes")
     val printTokens = flag("print-tokens", "Print the Tokens' names and IDs to the screen for debugging purposes")
     val printFirstSets = flag("print-first-sets", "Print the first sets of the grammar's non-terminals to the screen for debugging purposes")
@@ -30,7 +31,8 @@ object Main extends SexyOpt {
         val source = Source.fromFile(filename)
         val g = try source.mkString finally source.close()
         val debug = Parigen.DebugOptions(writeGraphs = writeGraphs, displayGraphs = displayGraphs, printAst = printAst,
-                                         printAlphabet = printAlphabet, printTokens = printTokens, printFirstSets = printFirstSets)
+                                         printSimplifiedGrammar = printSimplifiedGrammar, printAlphabet = printAlphabet,
+                                         printTokens = printTokens, printFirstSets = printFirstSets)
         val diags = Parigen.compile(g, outDir, language, packageName, debug)
         diags.foreach(System.err.println)
     }
