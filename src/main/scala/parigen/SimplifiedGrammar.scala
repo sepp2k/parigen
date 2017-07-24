@@ -1,8 +1,5 @@
 package parigen
 
-import lexer_generator.TokenInfo
-import lexer_generator.TokenExtractor
-
 object SimplifiedGrammar {
     case class Grammar(nonTerminals: Map[String, Expression], terminals: Map[String, TokenInfo]) {
         override def toString = nonTerminals.map {case (name, value) => s"$name: $value\n"}.mkString + terminals.values.mkString("\n")

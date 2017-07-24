@@ -1,8 +1,8 @@
 package parigen.parser_generator
 
-import parigen.lexer_generator.TokenInfo
+import parigen.TokenInfo
 import parigen.plang.PLang
-import parigen.Ast
+import parigen.SimplifiedGrammar
 
 object ParserGenerator {
     type FirstSet = Set[Option[TokenInfo.TokenID]]
@@ -11,46 +11,38 @@ object ParserGenerator {
     type FollowSets = Map[String, FollowSet]
     case class Parser(firstSets: FirstSets, followSets: FollowSets, parsingTable: ParsingTable, code: PLang.Module)
 
-    def generateParser(grammar: Ast.Grammar, tokens: Map[TokenInfo.TokenType, TokenInfo]): Parser = {
-        val pg = new ParserGenerator(grammar, tokens)
+    def generateParser(grammar: SimplifiedGrammar.Grammar): Parser = {
+        val pg = new ParserGenerator(grammar)
         Parser(pg.firstSets, null, null, null)
     }
 }
 
 import ParserGenerator._
 
-class ParserGenerator(grammar: Ast.Grammar, tokens: Map[TokenInfo.TokenType, TokenInfo]) {
-    val nonTerminals = grammar.rules.collect {
-        case Ast.Rule(name, flags, body) if !flags.tokenRule =>
-            name -> body
-    }.toMap
-
+class ParserGenerator(grammar: SimplifiedGrammar.Grammar) {
     def firstSets: FirstSets = {
-        nonTerminals.map {
-            case (name, body) =>
-                name -> firstSet(body)
+        grammar.nonTerminals.map { case (name, body) =>
+            name -> firstSet(body)
         }
     }
 
-    def firstSet(exp: Ast.Expression): FirstSet = exp match {
-        case Ast.RuleName(name) =>
-            tokens.get(TokenInfo.Named(name)) match {
-                case Some(tokenInfo) => Set(Some(tokenInfo.id))
-                case None => firstSet(nonTerminals(name))
+    def firstSet(exp: SimplifiedGrammar.Expression): FirstSet = {
+        exp.alternatives.flatMap {
+            case SimplifiedGrammar.Concatenation(Seq()) => Seq(None)
+            case concatenation => firstSetForConcat(concatenation.items)
+        }.toSet
+    }
+
+    def firstSetForConcat(items: Seq[SimplifiedGrammar.Item]): FirstSet = items match {
+        case Seq() => Set(None)
+        case Seq(SimplifiedGrammar.Terminal(name), _ @ _*) =>
+            Set(Some(grammar.terminals(name).id))
+        case Seq(SimplifiedGrammar.NonTerminal(name), tail @ _*) =>
+            val set = firstSet(grammar.nonTerminals(name))
+            if (set.contains(None)) {
+                (set - None) ++ firstSetForConcat(tail)
+            } else {
+                set
             }
-        case Ast.Concatenation(lhs, rhs) =>
-            val lhsFirstSet = firstSet(lhs)
-            if (lhsFirstSet.contains(None)) (lhsFirstSet - None) ++ firstSet(rhs)
-            else lhsFirstSet
-        case Ast.Or(lhs, rhs) =>
-            firstSet(lhs) ++ firstSet(rhs)
-        case Ast.StringLit("") =>
-            Set(None)
-        case Ast.StringLit(str) =>
-            Set(Some(tokens(TokenInfo.Literal(str)).id))
-        case Ast.KleeneStar(exp) =>
-            firstSet(exp) + None
-        case Ast.CharacterClass(_, _) =>
-            sys.error("Character class in non-token rule should have been rejected by the validator.")
     }
 }

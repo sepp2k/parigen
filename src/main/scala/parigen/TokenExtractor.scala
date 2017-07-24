@@ -1,6 +1,5 @@
-package parigen.lexer_generator
+package parigen
 
-import parigen._
 import scala.collection.mutable
 import TokenInfo._
 

@@ -1,6 +1,7 @@
 package parigen.lexer_generator
 
 import parigen.plang.PLang._
+import parigen.TokenInfo
 
 object PLangGenerator {
     val thisSource = MemberAccess(This, "source")

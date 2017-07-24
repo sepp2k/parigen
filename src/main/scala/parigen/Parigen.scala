@@ -28,11 +28,11 @@ object Parigen {
                         println("Simplified grammar:")
                         println(simplifiedGrammar)
                     }
-                    val lexer = LexerGenerator.generateLexer(ast)
                     if (debug.printTokens) {
                         println("Token IDs:")
-                        lexer.tokens.foreach(println)
+                        simplifiedGrammar.terminals.values.foreach(println)
                     }
+                    val lexer = LexerGenerator.generateLexer(simplifiedGrammar)
                     if (debug.printAlphabet) {
                         println("Alphabet:")
                         lexer.alphabet.foreach {
@@ -63,7 +63,7 @@ object Parigen {
                             outFile.close
                             println(s"Lexer written to $outDir/lexer.ts")
                     }
-                    val parser = ParserGenerator.generateParser(ast, lexer.tokens)
+                    val parser = ParserGenerator.generateParser(simplifiedGrammar)
                     if (debug.printFirstSets) println(parser.firstSets)
                     diags
                 }

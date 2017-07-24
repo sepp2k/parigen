@@ -1,6 +1,5 @@
-package parigen.lexer_generator
+package parigen
 
-import parigen._
 import TokenInfo._
 
 case class TokenInfo(tokenType: TokenType, regex: Ast.Expression, id: TokenID) {
