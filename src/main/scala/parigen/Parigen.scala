@@ -11,12 +11,24 @@ object Parigen {
     case object Scala extends Language
     case object TypeScript extends Language
 
-    def compile(src: String, outDir: String, language: Language, packageName: Option[String], debug: DebugOptions) = {
+    sealed abstract class CompilationResult {
+        def diagnostics: Seq[Validator.Diagnostic]
+    }
+
+    case class CompilationSuccess(
+        diagnostics: Seq[Validator.Diagnostic],
+        lexer: LexerGenerator.Lexer, lexerFile: String,
+        parser: ParserGenerator.Parser
+    ) extends CompilationResult
+
+    case class CompilationError(diagnostics: Seq[Validator.Diagnostic]) extends CompilationResult
+
+    def compile(src: String, outDir: String, language: Language, packageName: Option[String], debug: DebugOptions): CompilationResult = {
         Parser.parse(src) match {
             case Parser.Success(ast, _) =>
                 if (debug.printAst) Debug.printAst(ast)
                 val diags = Validator.validate(ast)
-                if (diags.exists(_.severity == Validator.Error)) diags
+                if (diags.exists(_.severity == Validator.Error)) CompilationError(diags)
                 else {
                     val simplifiedGrammar = SimplifiedGrammar.fromAst(ast)
                     if (debug.printSimplifiedGrammar) Debug.printSimplifiedGrammar(simplifiedGrammar)
@@ -25,24 +37,24 @@ object Parigen {
                     if (debug.printAlphabet) Debug.printAlphabet(lexer)
                     if (debug.writeGraphs) Debug.writeGraphs(lexer)
                     if (debug.displayGraphs) Debug.displayGraphs(lexer)
-                    language match {
+                    val lexerFile = language match {
                         case Scala =>
                             val outFile = new PrintStream(s"$outDir/Lexer.scala")
                             new plang.ScalaGenerator(outFile, 4).generate(lexer.code, packageName)
                             outFile.close
-                            println(s"Lexer written to $outDir/Lexer.scala")
+                            s"$outDir/Lexer.scala"
                         case TypeScript =>
                             val outFile = new PrintStream(s"$outDir/lexer.ts")
                             new plang.TypeScriptGenerator(outFile, 4).generate(lexer.code)
                             outFile.close
-                            println(s"Lexer written to $outDir/lexer.ts")
+                            s"$outDir/lexer.ts"
                     }
                     val parser = ParserGenerator.generateParser(simplifiedGrammar)
                     if (debug.printFirstSets) Debug.printFirstSets(parser.firstSets)
-                    diags
+                    CompilationSuccess(diags, lexer, lexerFile, parser)
                 }
             case Parser.NoSuccess(message, rest) =>
-                List( Validator.Diagnostic( Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message" ))
+                CompilationError(Seq(Validator.Diagnostic( Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message")))
         }
     }
 }

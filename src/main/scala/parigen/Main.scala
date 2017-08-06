@@ -33,7 +33,14 @@ object Main extends SexyOpt {
         val debug = Parigen.DebugOptions(writeGraphs = writeGraphs, displayGraphs = displayGraphs, printAst = printAst,
                                          printSimplifiedGrammar = printSimplifiedGrammar, printAlphabet = printAlphabet,
                                          printTokens = printTokens, printFirstSets = printFirstSets)
-        val diags = Parigen.compile(g, outDir, language, packageName, debug)
-        diags.foreach(System.err.println)
+        val result = Parigen.compile(g, outDir, language, packageName, debug)
+        result.diagnostics.foreach(System.err.println)
+        result match {
+            case _ : Parigen.CompilationError =>
+                System.err.println("Compilation failed")
+                sys.exit(1)
+            case result : Parigen.CompilationSuccess =>
+                println(s"Lexer written to ${result.lexerFile}")
+        }
     }
 }
