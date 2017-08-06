@@ -1,7 +1,5 @@
 package parigen
 
-import java.nio.file.Files
-import java.nio.charset.StandardCharsets.UTF_8
 import java.io.PrintStream
 import lexer_generator.LexerGenerator
 import parser_generator.ParserGenerator
@@ -16,41 +14,17 @@ object Parigen {
     def compile(src: String, outDir: String, language: Language, packageName: Option[String], debug: DebugOptions) = {
         Parser.parse(src) match {
             case Parser.Success(ast, _) =>
-                if (debug.printAst) {
-                    System.err.println("AST:")
-                    System.err.println(ast)
-                }
+                if (debug.printAst) Debug.printAst(ast)
                 val diags = Validator.validate(ast)
                 if (diags.exists(_.severity == Validator.Error)) diags
                 else {
                     val simplifiedGrammar = SimplifiedGrammar.fromAst(ast)
-                    if (debug.printSimplifiedGrammar) {
-                        println("Simplified grammar:")
-                        println(simplifiedGrammar)
-                    }
-                    if (debug.printTokens) {
-                        println("Token IDs:")
-                        simplifiedGrammar.terminals.values.foreach(println)
-                    }
+                    if (debug.printSimplifiedGrammar) Debug.printSimplifiedGrammar(simplifiedGrammar)
+                    if (debug.printTokens) Debug.printTokens(simplifiedGrammar)
                     val lexer = LexerGenerator.generateLexer(simplifiedGrammar)
-                    if (debug.printAlphabet) {
-                        println("Alphabet:")
-                        lexer.alphabet.foreach {
-                            case ((from, to), id) => println(s"$from .. $to -> $id")
-                        }
-                    }
-                    if (debug.writeGraphs) {
-                        val nfaFile = Files.createTempFile("nfa", ".dot")
-                        Files.write(nfaFile, util.AutomataVisuzualizer.automatonToDot(lexer.nfa).getBytes(UTF_8))
-                        println(s"Nfa written to $nfaFile")
-                        val dfaFile = Files.createTempFile("dfa", ".dot")
-                        Files.write(dfaFile, util.AutomataVisuzualizer.automatonToDot(lexer.dfa).getBytes(UTF_8))
-                        println(s"Dfa written to $dfaFile")
-                    }
-                    if (debug.displayGraphs) {
-                        util.AutomataVisuzualizer.displayAutomaton(lexer.nfa)
-                        util.AutomataVisuzualizer.displayAutomaton(lexer.dfa)
-                    }
+                    if (debug.printAlphabet) Debug.printAlphabet(lexer)
+                    if (debug.writeGraphs) Debug.writeGraphs(lexer)
+                    if (debug.displayGraphs) Debug.displayGraphs(lexer)
                     language match {
                         case Scala =>
                             val outFile = new PrintStream(s"$outDir/Lexer.scala")
@@ -64,7 +38,7 @@ object Parigen {
                             println(s"Lexer written to $outDir/lexer.ts")
                     }
                     val parser = ParserGenerator.generateParser(simplifiedGrammar)
-                    if (debug.printFirstSets) println(parser.firstSets)
+                    if (debug.printFirstSets) Debug.printFirstSets(parser.firstSets)
                     diags
                 }
             case Parser.NoSuccess(message, rest) =>

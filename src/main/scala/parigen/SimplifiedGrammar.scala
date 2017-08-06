@@ -10,7 +10,10 @@ object SimplifiedGrammar {
     }
 
     case class Concatenation(items: Seq[Item]) {
-        override def toString = items.mkString(" ")
+        override def toString = {
+            if (items.isEmpty) "ϵ"
+            else items.mkString(" ")
+        }
     }
 
     sealed abstract class Item {

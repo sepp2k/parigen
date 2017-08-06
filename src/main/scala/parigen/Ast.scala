@@ -27,7 +27,10 @@ object Ast {
     ).orElse({ case c => c } : PartialFunction[Char, Char])
 
     case class StringLit(string: String) extends Expression {
-        override def toString = s""""$string""""
+        override def toString = {
+            if (string.isEmpty) "ϵ"
+            else s""""$string""""
+        }
     }
 
     object StringLit {
