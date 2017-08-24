@@ -13,11 +13,11 @@ object Main extends SexyOpt {
     val printSimplifiedGrammar = flag("print-simplified-grammar", "Prints the simplified grammar to the screen for debugging purposes")
     val printAlphabet = flag("print-alphabet", "Print the generated alphabet mapping to the screen for debugging purposes")
     val printTokens = flag("print-tokens", "Print the Tokens' names and IDs to the screen for debugging purposes")
-    val printFirstSets = flag("print-first-sets", "Print the first sets of the grammar's non-terminals to the screen for debugging purposes")
+    val printFirstAndFollow = flag("print-first-and-follow", "Print the first and follow sets of the grammar's non-terminals to the screen for debugging purposes")
     val outDir = option("out-dir", 'o', "The directory in which the generated source files will be placed (default: the current directory)", ".")
     val target = option("target", 't', "The target language for code generation (default: typescript; available: typescript, scala)", "typescript")
     val packageName = option("package", 'p', "The package to generate code into")
-    val filename = optionalPosArg("filename", "The name of the file containing the parigen grammar.", "src/main/parigen/parigen.parigen")
+    val filename = optionalPosArg("filename", "The name of the file containing the parigen grammar", "src/main/parigen/parigen.parigen")
 
     def main(args: Array[String]): Unit = {
         parse(args)
@@ -32,7 +32,7 @@ object Main extends SexyOpt {
         val g = try source.mkString finally source.close()
         val debug = Parigen.DebugOptions(writeGraphs = writeGraphs, displayGraphs = displayGraphs, printAst = printAst,
                                          printSimplifiedGrammar = printSimplifiedGrammar, printAlphabet = printAlphabet,
-                                         printTokens = printTokens, printFirstSets = printFirstSets)
+                                         printTokens = printTokens, printFirstAndFollow = printFirstAndFollow)
         val result = Parigen.compile(g, outDir, language, packageName, debug)
         result.diagnostics.foreach(System.err.println)
         result match {

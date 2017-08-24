@@ -44,10 +44,14 @@ object Debug {
         AutomataVisuzualizer.displayAutomaton(lexer.dfa)
     }
 
-    def printFirstSets(sets: ParserGenerator.FirstSets) = {
+    def printFirstAndFollow(parser: ParserGenerator.Parser) = {
         println("First sets:")
-        sets.foreach {case (name,set) =>
+        parser.firstSets.foreach {case (name,set) =>
             println(s"$name -> ${firstSetToString(set)}")
+        }
+        println("Follow sets:")
+        parser.followSets.foreach {case (name,set) =>
+            println(s"$name -> ${set.mkString(", ")}")
         }
     }
 
@@ -55,6 +59,6 @@ object Debug {
         set.map {
             case Some(sym) => sym
             case None => "ϵ"
-        }
+        }.mkString(", ")
     }
 }

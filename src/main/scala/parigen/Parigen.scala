@@ -6,7 +6,7 @@ import parser_generator.ParserGenerator
 
 object Parigen {
     case class DebugOptions(writeGraphs: Boolean, displayGraphs: Boolean, printAst: Boolean, printSimplifiedGrammar: Boolean,
-                            printAlphabet: Boolean, printTokens: Boolean, printFirstSets: Boolean)
+                            printAlphabet: Boolean, printTokens: Boolean, printFirstAndFollow: Boolean)
     sealed abstract class Language
     case object Scala extends Language
     case object TypeScript extends Language
@@ -50,11 +50,11 @@ object Parigen {
                             s"$outDir/lexer.ts"
                     }
                     val parser = ParserGenerator.generateParser(simplifiedGrammar)
-                    if (debug.printFirstSets) Debug.printFirstSets(parser.firstSets)
+                    if (debug.printFirstAndFollow) Debug.printFirstAndFollow(parser)
                     CompilationSuccess(diags, lexer, lexerFile, parser)
                 }
             case Parser.NoSuccess(message, rest) =>
-                CompilationError(Seq(Validator.Diagnostic( Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message")))
+                CompilationError(Seq(Validator.Diagnostic(Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message")))
         }
     }
 }

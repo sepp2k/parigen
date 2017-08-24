@@ -13,7 +13,8 @@ object ParserGenerator {
 
     def generateParser(grammar: SimplifiedGrammar.Grammar): Parser = {
         val pg = new ParserGenerator(grammar)
-        Parser(pg.firstSets, null, null, null)
+        val firstSets = pg.firstSets
+        Parser(firstSets, pg.followSets(firstSets), null, null)
     }
 }
 
@@ -38,13 +39,41 @@ class ParserGenerator(grammar: SimplifiedGrammar.Grammar) {
         case Seq(SimplifiedGrammar.Terminal(name), _ @ _*) =>
             Set(Some(grammar.terminals(name).id))
         case Seq(SimplifiedGrammar.NonTerminal(name), tail @ _*) =>
-            alreadyComputed.getOrElse(name, {
-                val set = firstSet(grammar.nonTerminals(name), alreadyComputed)
-                if (set.contains(None)) {
-                    (set - None) ++ firstSetForConcat(tail, alreadyComputed)
-                } else {
-                    set
+            val set = alreadyComputed.getOrElse(name, firstSet(grammar.nonTerminals(name), alreadyComputed))
+            if (set.contains(None)) {
+                (set - None) ++ firstSetForConcat(tail, alreadyComputed)
+            } else {
+                set
+            }
+    }
+
+    /** Return a set containing the name of the given non-terminal as well as those of any non-terminals that
+      * can appear in its tail position */
+    def trailingNonTerms(name: String, visited: Set[String] = Set()): Set[String] = {
+        if (visited.contains(name)) Set()
+        else {
+            grammar.nonTerminals(name).alternatives.flatMap { concat =>
+                concat.items.lastOption match {
+                    case Some(SimplifiedGrammar.NonTerminal(trailing)) => trailingNonTerms(trailing, visited + name) + trailing
+                    case Some(SimplifiedGrammar.Terminal(_)) | None => None
                 }
-            })
+            }.toSet + name
+        }
+    }
+
+    def followSets(firstSets: FirstSets): FollowSets = {
+        grammar.nonTerminals.foldLeft(Map[String, FollowSet]()) { case (acc, (_, body)) =>
+            body.alternatives.foldLeft(acc) { case (acc, concat) =>
+                concat.items.zip(concat.items.tails.toIterable.tail).foldLeft(acc) {
+                    case (acc, (SimplifiedGrammar.Terminal(term), _)) => acc
+                    case (acc, (SimplifiedGrammar.NonTerminal(name), tail)) =>
+                        val follow = firstSetForConcat(tail, firstSets).flatMap(x => x)
+                        val newEntries = trailingNonTerms(name).map {
+                            name => name -> (acc.getOrElse(name, Set()) ++ follow)
+                        }
+                        acc ++ newEntries
+                }
+            }
+        }
     }
 }
