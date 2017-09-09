@@ -24,8 +24,8 @@ object Parigen {
     case class CompilationError(diagnostics: Seq[Validator.Diagnostic]) extends CompilationResult
 
     def compile(src: String, outDir: String, language: Language, packageName: Option[String], debug: DebugOptions): CompilationResult = {
-        Parser.parse(src) match {
-            case Parser.Success(ast, _) =>
+        ParigenParser.parse(src) match {
+            case ParigenParser.Success(ast, _) =>
                 if (debug.printAst) Debug.printAst(ast)
                 val diags = Validator.validate(ast)
                 if (diags.exists(_.severity == Validator.Error)) CompilationError(diags)
@@ -53,7 +53,7 @@ object Parigen {
                     if (debug.printFirstAndFollow) Debug.printFirstAndFollow(parser)
                     CompilationSuccess(diags, lexer, lexerFile, parser)
                 }
-            case Parser.NoSuccess(message, rest) =>
+            case ParigenParser.NoSuccess(message, rest) =>
                 CompilationError(Seq(Validator.Diagnostic(Validator.Error, None, s"Illegal syntax at ${rest.pos}: $message")))
         }
     }

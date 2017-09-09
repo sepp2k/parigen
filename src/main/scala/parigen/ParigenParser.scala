@@ -2,7 +2,7 @@ package parigen
 
 import scala.util.parsing.combinator._
 
-object Parser extends RegexParsers {
+object ParigenParser extends RegexParsers {
     def grammar = rule.* ^^ {
         rules => Ast.Grammar(rules)
     }
